@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cosmic Couch: a psychedelic chill hub with a trance tunnel, neon kaleidoscope, munchie generator, lo-fi radio and deep thoughts.">
+<meta property="og:title" content="Cosmic Couch">
+<meta property="og:description" content="Snacks, shows, sounds and thoughts too big for your brain. Everything you need without getting up.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0c0616">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%8B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>Cosmic Couch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Outfit:wght@300;400;600;800&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one long couch-scroll — a living plasma hero, then four "stations" in a loose bento grid, each a glowing tube-lit panel */
+:root{
+  --bg:#0c0616; --bg2:#160b26; --panel:#1a0f2c; --line:#3a2560;
+  --fg:#f4ecff; --dim:#b3a4cf;
+  --pink:#ff3df2; --cyan:#3ff3ff; --lime:#c4ff4d; --amber:#ffb547; --violet:#9b5cff;
+  --display:"Bagel Fat One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"DM Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;overflow-x:hidden}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;line-height:1.02}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+#plasma{position:absolute;inset:0;width:100%;height:100%;display:block;filter:saturate(1.25)}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,transparent 0,rgba(12,6,22,.55) 70%),linear-gradient(180deg,transparent 60%,var(--bg));pointer-events:none}
+.hero .wrap{position:relative;z-index:2;padding-block:72px 64px;display:grid;gap:22px}
+.hero h1{font-size:clamp(56px,13vw,148px);color:var(--fg);text-shadow:0 0 18px var(--pink),0 0 48px rgba(255,61,242,.55),4px 4px 0 var(--violet)}
+.hero h1 span{display:block;color:var(--lime);text-shadow:0 0 18px var(--lime),0 0 40px rgba(196,255,77,.4),4px 4px 0 #2b6b00}
+.hero p{max-width:34ch;font-size:clamp(17px,2.4vw,21px);margin:0;color:var(--fg)}
+.hero-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{border:1.5px solid var(--cyan);background:rgba(63,243,255,.08);padding:12px 20px;border-radius:999px;font-weight:600;box-shadow:0 0 14px rgba(63,243,255,.35),inset 0 0 10px rgba(63,243,255,.15);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 26px rgba(63,243,255,.6),inset 0 0 14px rgba(63,243,255,.25)}
+.btn.pink{border-color:var(--pink);background:rgba(255,61,242,.1);box-shadow:0 0 14px rgba(255,61,242,.4),inset 0 0 10px rgba(255,61,242,.15)}
+.btn.lime{border-color:var(--lime);background:rgba(196,255,77,.08);box-shadow:0 0 14px rgba(196,255,77,.35)}
+.hint{font-family:var(--mono);font-size:12px;color:var(--dim)}
+
+/* GRID */
+main{padding-block:48px 24px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.station{grid-column:span 6;background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0;position:relative}
+.station.wide{grid-column:span 12}
+.station h2{font-size:clamp(30px,4.4vw,42px)}
+.st-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.glow-pink h2{color:var(--pink);text-shadow:0 0 16px rgba(255,61,242,.6)}
+.glow-cyan h2{color:var(--cyan);text-shadow:0 0 16px rgba(63,243,255,.55)}
+.glow-lime h2{color:var(--lime);text-shadow:0 0 16px rgba(196,255,77,.5)}
+.glow-amber h2{color:var(--amber);text-shadow:0 0 16px rgba(255,181,71,.55)}
+.sub{color:var(--dim);margin:0;max-width:52ch}
+
+/* Munchies */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 13px;font-size:14px;transition:.15s}
+.chip[aria-pressed="true"]{border-color:var(--pink);background:rgba(255,61,242,.16);box-shadow:0 0 12px rgba(255,61,242,.35)}
+.lazy{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--pink)}
+.result{border:1px dashed var(--line);border-radius:16px;padding:16px 18px;min-height:110px;display:grid;gap:6px;align-content:start}
+.result h3{font-size:24px;color:var(--fg)}
+.result .meta{font-family:var(--mono);font-size:12px;color:var(--amber)}
+.result p{margin:0;color:var(--fg)}
+
+/* Watch */
+.moods{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.mood{border:1px solid var(--line);border-radius:14px;background:transparent;padding:12px;text-align:left;display:grid;gap:2px}
+.mood b{font-weight:600}
+.mood small{color:var(--dim);font-size:12px}
+.mood[aria-pressed="true"]{border-color:var(--cyan);background:rgba(63,243,255,.1);box-shadow:0 0 14px rgba(63,243,255,.3)}
+.picks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.picks li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.picks li:last-child{border-bottom:0}
+.picks .yr{font-family:var(--mono);font-size:12px;color:var(--cyan);font-variant-numeric:tabular-nums}
+.picks .why{display:block;color:var(--dim);font-size:14px}
+
+/* Radio */
+.radio{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.vinyl{width:120px;height:120px;border-radius:50%;background:repeating-radial-gradient(circle,#140a20 0 2px,#22123a 2px 4px);position:relative;box-shadow:0 0 30px rgba(155,92,255,.35)}
+.vinyl::after{content:"";position:absolute;inset:38%;border-radius:50%;background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--cyan),var(--pink))}
+.vinyl.spin{animation:spin 3.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.radio-ctl{display:grid;gap:12px;min-width:0}
+.now{font-family:var(--mono);font-size:13px;color:var(--lime)}
+.bars{display:flex;gap:4px;align-items:flex-end;height:36px}
+.bars i{flex:1;background:linear-gradient(var(--pink),var(--violet));border-radius:3px;height:12%;transition:height .12s}
+
+/* Thoughts */
+.thought{font-family:var(--display);font-size:clamp(24px,3.6vw,38px);line-height:1.15;color:var(--fg);margin:0;min-height:2.4em;text-wrap:balance}
+.thought em{font-style:normal;color:var(--amber)}
+.t-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.count{font-family:var(--mono);font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+
+footer{border-top:1px solid var(--line);margin-top:28px}
+footer .wrap{padding-block:26px 40px;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;color:var(--dim);font-size:14px}
+footer b{color:var(--fg);font-weight:600}
+
+.s7{grid-column:span 7}.s5{grid-column:span 5}
+
+/* Trance card */
+.trance-card{overflow:hidden;background:radial-gradient(ellipse at 80% 50%,rgba(155,92,255,.35),transparent 60%),radial-gradient(ellipse at 10% 100%,rgba(255,61,242,.25),transparent 55%),linear-gradient(160deg,var(--panel),var(--bg2))}
+.trance-card h2{color:var(--violet);text-shadow:0 0 18px rgba(155,92,255,.8),0 0 40px rgba(255,61,242,.4)}
+.trance-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.tog{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--dim)}
+.tog input{accent-color:var(--violet);width:18px;height:18px}
+.btn.violet{border-color:var(--violet);background:rgba(155,92,255,.14);box-shadow:0 0 18px rgba(155,92,255,.5),inset 0 0 12px rgba(155,92,255,.2);font-size:18px;padding:14px 26px}
+#trance{position:fixed;inset:0;z-index:100;background:#000}
+#tCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.t-bar{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));z-index:2}
+.t-bar .label{color:#e9dcff}
+.t-mantra{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--display);font-size:clamp(22px,4vw,40px);color:#fff;text-shadow:0 0 20px var(--pink);z-index:2;padding-inline:16px;transition:opacity 1.2s}
+
+/* Kaleidoscope */
+#kaleido{width:100%;height:360px;border-radius:16px;border:1px solid var(--line);background:var(--bg);touch-action:none;cursor:crosshair;display:block}
+select{font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+
+/* Breathe */
+.breathe-stage{display:grid;place-items:center;height:300px}
+.orb{width:220px;height:220px;max-width:100%;border-radius:50%;display:grid;place-items:center;text-align:center;font-family:var(--display);font-size:22px;color:#fff;background:radial-gradient(circle at 35% 30%,var(--cyan),var(--violet) 55%,var(--pink));box-shadow:0 0 50px rgba(63,243,255,.45),0 0 110px rgba(155,92,255,.35);transform:scale(.55);transition-property:transform;transition-timing-function:ease-in-out}
+.orb span{transform:scale(1.4)}
+.b-meta{font-family:var(--mono);font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+
+/* Game */
+#game{width:100%;height:340px;border-radius:16px;border:1px solid var(--line);background:var(--bg);display:block;touch-action:none}
+.g-row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.score{font-family:var(--mono);font-size:14px;color:var(--lime);font-variant-numeric:tabular-nums}
+
+@media (max-width:760px){
+  .station{grid-column:span 12}
+  .radio{grid-template-columns:1fr;justify-items:start}
+  .hero .wrap{padding-block:56px 48px}
+}
+@media (prefers-reduced-motion:reduce){
+  .vinyl.spin{animation:none}
+  .btn,.btn:hover{transition:none;transform:none}
+}
+</style>
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <canvas id="plasma" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <span class="label">Est. 4:20 · open all night</span>
+    <h1>Cosmic <span>Couch</span></h1>
+    <p>Snacks, shows, sounds and thoughts too big for your brain. Everything you need without getting up.</p>
+    <div class="hero-row">
+      <button class="btn pink" id="shiftBtn" type="button">Shift the colors</button>
+      <button class="btn" id="heroPlay" type="button">Play couch radio</button>
+      <button class="btn violet" id="heroTrance" type="button" style="font-size:16px;padding:12px 20px">Trance mode</button>
+      <span class="hint">tip: tap the sky, it likes that</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap grid">
+
+    <!-- MUNCHIES -->
+    <section class="station glow-pink" aria-labelledby="m-h">
+      <div class="st-head">
+        <h2 id="m-h">Munchie Machine</h2>
+        <span class="label">kitchen raid</span>
+      </div>
+      <p class="sub">Tap what's in your kitchen, set how much effort you've got left, and get a snack.</p>
+      <div class="chips" id="pantry" role="group" aria-label="What's in your kitchen"></div>
+      <div class="lazy">
+        <span class="label">Couch-locked</span>
+        <input type="range" id="lazy" min="1" max="3" step="1" value="2" aria-label="Effort level">
+        <span class="label">Chef mode</span>
+      </div>
+      <button class="btn pink" id="munchBtn" type="button">Feed me</button>
+      <div class="result" id="munchOut" aria-live="polite"></div>
+    </section>
+
+    <!-- WATCH -->
+    <section class="station glow-cyan" aria-labelledby="w-h">
+      <div class="st-head">
+        <h2 id="w-h">Watch Wheel</h2>
+        <span class="label">screen time</span>
+      </div>
+      <p class="sub">Pick a mood. Get three things to put on.</p>
+      <div class="moods" id="moods" role="group" aria-label="Mood"></div>
+      <ul class="picks" id="picks" aria-live="polite"></ul>
+      <button class="btn" id="reroll" type="button">Spin again</button>
+    </section>
+
+    <!-- RADIO -->
+    <section class="station wide glow-lime" aria-labelledby="r-h">
+      <div class="st-head">
+        <h2 id="r-h">Couch Radio</h2>
+        <span class="label">generated live in your browser</span>
+      </div>
+      <div class="radio">
+        <div class="vinyl" id="vinyl" aria-hidden="true"></div>
+        <div class="radio-ctl">
+          <p class="sub">Slow jazzy chords, warm vinyl crackle and a lazy beat. Made fresh every time, so it never repeats exactly.</p>
+          <div class="now" id="now">Paused · 72 BPM · key of C</div>
+          <div class="bars" id="bars" aria-hidden="true"></div>
+          <div class="hero-row">
+            <button class="btn lime" id="playBtn" type="button">Play</button>
+            <label class="label" for="vol">Volume</label>
+            <input type="range" id="vol" min="0" max="100" value="55" style="max-width:180px">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- THOUGHTS -->
+    <section class="station wide glow-amber" aria-labelledby="t-h">
+      <div class="st-head">
+        <h2 id="t-h">Deep Thoughts Dispenser</h2>
+        <span class="count" id="tcount">thought 1 of 36</span>
+      </div>
+      <p class="thought" id="thought" aria-live="polite"></p>
+      <div class="t-row">
+        <button class="btn" style="border-color:var(--amber);box-shadow:0 0 14px rgba(255,181,71,.35);background:rgba(255,181,71,.08)" id="thinkBtn" type="button">Blow my mind</button>
+        <button class="btn pink" id="copyBtn" type="button">Copy thought</button>
+        <span class="hint" id="copyMsg" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- TRANCE -->
+    <section class="station wide trance-card" aria-labelledby="tr-h">
+      <div class="st-head">
+        <h2 id="tr-h">Trance Tunnel</h2>
+        <span class="label">full-screen · 138 BPM</span>
+      </div>
+      <p class="sub">A hypnotic neon tunnel that pulses with a live trance beat. Lie back, stare into the middle and let it carry you. Press Esc or Exit to come back.</p>
+      <div class="trance-row">
+        <button class="btn violet" id="tranceBtn" type="button">Enter the tunnel</button>
+        <label class="tog"><input type="checkbox" id="tMusic" checked> Trance music</label>
+        <span class="hint">Contains slow-moving colour patterns, no strobing.</span>
+      </div>
+    </section>
+
+    <!-- KALEIDOSCOPE -->
+    <section class="station s7 glow-pink" aria-labelledby="k-h">
+      <div class="st-head">
+        <h2 id="k-h">Neon Kaleidoscope</h2>
+        <span class="label">draw anything</span>
+      </div>
+      <p class="sub">Drag your finger or mouse. Every line gets mirrored into a glowing mandala.</p>
+      <canvas id="kaleido" aria-label="Kaleidoscope drawing canvas"></canvas>
+      <div class="g-row">
+        <label class="label" for="ksym">Mirrors</label>
+        <select id="ksym"><option>6</option><option selected>8</option><option>12</option><option>16</option></select>
+        <button class="btn pink" id="kAuto" type="button">Auto swirl</button>
+        <button class="btn" id="kClear" type="button">Clear</button>
+      </div>
+    </section>
+
+    <!-- BREATHE -->
+    <section class="station s5 glow-cyan" aria-labelledby="b-h">
+      <div class="st-head">
+        <h2 id="b-h">Breathe Orb</h2>
+        <span class="label">4 · 4 · 6</span>
+      </div>
+      <p class="sub">Feeling too high or too wired? Follow the orb: in for 4, hold for 4, out for 6.</p>
+      <div class="breathe-stage"><div class="orb" id="orb"><span id="orbTxt">Ready</span></div></div>
+      <div class="g-row">
+        <button class="btn" id="breatheBtn" type="button">Start breathing</button>
+        <span class="b-meta" id="bMeta">0 rounds</span>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="station wide glow-lime" aria-labelledby="g-h">
+      <div class="st-head">
+        <h2 id="g-h">Munchie Catch</h2>
+        <span class="label">mini game</span>
+      </div>
+      <p class="sub">Slide the couch to catch falling snacks. Dodge the alarm clocks, they mean you have to get up. Use your mouse, finger or arrow keys.</p>
+      <canvas id="game" aria-label="Munchie Catch game"></canvas>
+      <div class="g-row">
+        <button class="btn lime" id="gameBtn" type="button">Start game</button>
+        <span class="score" id="gScore">Score 0 · Lives 3 · Best 0</span>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><b>Couch rules:</b> drink water, eat something real, never drive high, and know your local laws.</span>
+    <span>Cosmic Couch · 18+ · made for chilling</span>
+  </div>
+</footer>
+
+<div id="trance" hidden role="dialog" aria-label="Trance Tunnel">
+  <canvas id="tCanvas" aria-hidden="true"></canvas>
+  <div class="t-bar">
+    <span class="label">Trance Tunnel · <span id="tBpm">138 BPM</span></span>
+    <button class="btn pink" id="tExit" type="button">Exit</button>
+  </div>
+  <div class="t-mantra" id="tMantra">Stare into the centre</div>
+</div>
+
+<script>
+/* ---------- PLASMA HERO ---------- */
+(function(){
+  const c=document.getElementById('plasma'),x=c.getContext('2d');
+  const W=120,H=70; c.width=W; c.height=H;
+  const img=x.createImageData(W,H);
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const palettes=[
+    [[255,61,242],[63,243,255],[155,92,255],[196,255,77]],
+    [[255,181,71],[255,61,242],[60,20,120],[63,243,255]],
+    [[196,255,77],[63,243,255],[20,10,60],[255,61,242]]
+  ];
+  let pi=0,t=0,boost=0;
+  function col(v,p){
+    v=(v%1+1)%1; const n=p.length, f=v*n, i=Math.floor(f)%n, j=(i+1)%n, k=f-Math.floor(f);
+    return [p[i][0]+(p[j][0]-p[i][0])*k,p[i][1]+(p[j][1]-p[i][1])*k,p[i][2]+(p[j][2]-p[i][2])*k];
+  }
+  function frame(){
+    const p=palettes[pi];
+    for(let y=0;y<H;y++)for(let i=0;i<W;i++){
+      const u=i/W*6,v=y/H*4;
+      const s=Math.sin(u+t)+Math.sin(v*1.3-t*.7)+Math.sin((u+v)*.8+t*.5)+Math.sin(Math.hypot(u-3+Math.sin(t*.3)*2,v-2)*2.2-t);
+      const cc=col(s/8+.5+t*.03,p), o=(y*W+i)*4;
+      img.data[o]=cc[0];img.data[o+1]=cc[1];img.data[o+2]=cc[2];img.data[o+3]=255;
+    }
+    x.putImageData(img,0,0);
+    t+=0.018+boost; boost*=0.95;
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  frame();
+  function shift(){pi=(pi+1)%palettes.length;boost=.12;if(reduce)frame();}
+  document.getElementById('shiftBtn').addEventListener('click',shift);
+  document.querySelector('.hero').addEventListener('click',e=>{if(!e.target.closest('button'))shift();});
+})();
+
+/* ---------- MUNCHIES ---------- */
+const PANTRY=["Bread","Cheese","Chips","Maggi","Eggs","Peanut butter","Banana","Chocolate","Ice cream","Biscuits","Butter","Ketchup","Popcorn","Cereal","Milk","Leftover rice"];
+const RECIPES=[
+  {n:"Cheese chip toastie",need:["Bread","Cheese","Chips"],lazy:2,t:"6 min",d:"Butter the outside, stuff cheese and a fistful of chips inside, toast till it crunches like a cereal ad."},
+  {n:"Peanut butter banana boat",need:["Banana","Peanut butter"],lazy:1,t:"1 min",d:"Slice a banana lengthwise, slap peanut butter down the middle. Add chocolate if you're feeling fancy."},
+  {n:"Cheesy egg Maggi",need:["Maggi","Eggs","Cheese"],lazy:2,t:"5 min",d:"Crack an egg into boiling Maggi, stir, throw cheese on top and let it melt into a golden blanket."},
+  {n:"Biscuit ice cream sandwich",need:["Biscuits","Ice cream"],lazy:1,t:"1 min",d:"One scoop between two biscuits. Press gently. Eat before it escapes."},
+  {n:"Midnight egg fried rice",need:["Leftover rice","Eggs"],lazy:3,t:"10 min",d:"Hot pan, butter, scramble the egg, toss in rice and ketchup. Fry until the bottom crisps up."},
+  {n:"Sweet and salty popcorn bowl",need:["Popcorn","Chocolate"],lazy:2,t:"4 min",d:"Melt chocolate, drizzle over warm popcorn, let it set for one full minute if you can wait."},
+  {n:"Cereal milkshake",need:["Cereal","Milk","Ice cream"],lazy:2,t:"3 min",d:"Blend cereal, milk and a scoop of ice cream. Tastes like Saturday morning."},
+  {n:"PB choco toast",need:["Bread","Peanut butter","Chocolate"],lazy:1,t:"3 min",d:"Toast, peanut butter, grated or broken chocolate on top so it goes melty."},
+  {n:"Ketchup chip crunch sandwich",need:["Bread","Chips","Ketchup"],lazy:1,t:"1 min",d:"Ketchup on bread, chips in the middle, close and crunch. Zero dishes."},
+  {n:"Butter garlic-ish toast",need:["Bread","Butter"],lazy:1,t:"3 min",d:"Toast with a generous layer of butter. Simple. Perfect. No notes."},
+  {n:"Banana ice cream split",need:["Banana","Ice cream","Chocolate"],lazy:2,t:"3 min",d:"Split banana, two scoops, chocolate on top. You built a dessert. Be proud."},
+  {n:"Cheese omelette",need:["Eggs","Cheese","Butter"],lazy:3,t:"8 min",d:"Beat eggs, butter in the pan, cheese in the middle, fold it over and slide it out like a pro."},
+  {n:"Cereal straight from the box",need:["Cereal"],lazy:1,t:"0 min",d:"No bowl, no milk, no judgement. Just you and the box."},
+  {n:"Chocolate milk",need:["Milk","Chocolate"],lazy:1,t:"2 min",d:"Melt chocolate in a splash of warm milk, top up with cold milk, stir."},
+  {n:"Masala Maggi deluxe",need:["Maggi","Butter","Cheese"],lazy:2,t:"5 min",d:"Cook Maggi a little dry, finish with butter and cheese. Restaurant-level at 2 AM."},
+  {n:"Biscuit PB stack",need:["Biscuits","Peanut butter"],lazy:1,t:"1 min",d:"Stack biscuits with peanut butter in between until the tower feels right."}
+];
+const pantryEl=document.getElementById('pantry');
+const picked=new Set(["Bread","Cheese","Chips","Banana","Peanut butter"]);
+PANTRY.forEach(p=>{
+  const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=p;
+  b.setAttribute('aria-pressed',picked.has(p));
+  b.onclick=()=>{picked.has(p)?picked.delete(p):picked.add(p);b.setAttribute('aria-pressed',picked.has(p));};
+  pantryEl.appendChild(b);
+});
+let lastMunch=-1;
+function munch(){
+  const lazy=+document.getElementById('lazy').value;
+  let ok=RECIPES.map((r,i)=>({r,i})).filter(o=>o.r.need.every(n=>picked.has(n))&&o.r.lazy<=lazy);
+  const out=document.getElementById('munchOut');
+  if(!ok.length){
+    out.innerHTML='<h3>The fridge is judging you</h3><p>Nothing matches. Tap a few more things you have, or move the slider toward chef mode.</p>';return;
+  }
+  if(ok.length>1) ok=ok.filter(o=>o.i!==lastMunch);
+  const o=ok[Math.floor(Math.random()*ok.length)];lastMunch=o.i;
+  const lv=["","couch-locked","medium effort","chef mode"][o.r.lazy];
+  out.innerHTML=`<span class="meta">${o.r.t} · ${lv} · uses ${o.r.need.join(', ').toLowerCase()}</span><h3>${o.r.n}</h3><p>${o.r.d}</p>`;
+}
+document.getElementById('munchBtn').onclick=munch;
+munch();
+
+/* ---------- WATCH WHEEL ---------- */
+const MOODS={
+  laugh:{b:"Laugh till it hurts",s:"dumb fun",l:[["Pineapple Express","2008","Stoner action comedy, the whole genre in one movie"],["Superbad","2007","Pure awkward teenage chaos"],["What We Do in the Shadows","2019","Vampire roommates, peak deadpan"],["The Office (US)","2005","Comfort chaos for the hundredth time"],["Brooklyn Nine-Nine","2013","Fast jokes, zero brain required"],["Harold & Kumar Go to White Castle","2004","A quest for burgers. That's it."],["Paddington 2","2017","Wholesome and secretly hilarious"]]},
+  visuals:{b:"Zone-out visuals",s:"pretty colours",l:[["Planet Earth II","2016","Nature looks fake it's so beautiful"],["Spider-Man: Into the Spider-Verse","2018","Every frame is a poster"],["Fantasia","1940","Music plus wild animation"],["Our Planet","2019","Calm narration, huge views"],["Baraka","1992","No dialogue, just the planet"],["Love, Death & Robots","2019","Short, weird, gorgeous episodes"],["Avatar","2009","Glowing forests on a big screen"]]},
+  mind:{b:"Mind-bending",s:"wait what",l:[["Inception","2010","Dreams inside dreams inside dreams"],["Interstellar","2014","Space, time and crying"],["Everything Everywhere All at Once","2022","Every universe at the same time"],["Dark","2017","Time travel family tree from hell"],["Arrival","2016","Language rewires time"],["Coherence","2013","One dinner party, many realities"],["The Matrix","1999","Is any of this real?"]]},
+  cozy:{b:"Cozy and soft",s:"blanket time",l:[["Spirited Away","2001","Bathhouse spirits and big feelings"],["My Neighbor Totoro","1988","The softest movie ever made"],["Kiki's Delivery Service","1989","Witch, cat, bakery, perfection"],["The Great British Bake Off","2010","Gentle people, beautiful cakes"],["Ted Lasso","2020","Kindness as a sport"],["Wall-E","2008","Robot romance with almost no words"],["Ratatouille","2007","A rat cooks better than you"]]},
+  music:{b:"Music trip",s:"turn it up",l:[["Pink Floyd: Live at Pompeii","1972","Echoing ruins, endless jams"],["Stop Making Sense","1984","The best concert film, big suit and all"],["Soul","2020","Jazz and what makes life worth it"],["Whiplash","2014","Drums and pure tension"],["Coco","2017","Music, family and very bright colours"],["Yellow Submarine","1968","The Beatles in a cartoon dream"],["Baby Driver","2017","Every scene cut to the beat"]]}
+};
+let mood="laugh";
+const moodsEl=document.getElementById('moods');
+Object.entries(MOODS).forEach(([k,m])=>{
+  const b=document.createElement('button');b.type='button';b.className='mood';
+  b.innerHTML=`<b>${m.b}</b><small>${m.s}</small>`;b.setAttribute('aria-pressed',k===mood);
+  b.onclick=()=>{mood=k;[...moodsEl.children].forEach(c=>c.setAttribute('aria-pressed',c===b));spin();};
+  moodsEl.appendChild(b);
+});
+function spin(){
+  const l=[...MOODS[mood].l].sort(()=>Math.random()-.5).slice(0,3);
+  document.getElementById('picks').innerHTML=l.map(([t,y,w])=>`<li><span class="yr">${y}</span><span><b>${t}</b><span class="why">${w}</span></span></li>`).join('');
+}
+document.getElementById('reroll').onclick=spin;
+spin();
+
+/* ---------- COUCH RADIO ---------- */
+const barsEl=document.getElementById('bars');
+for(let i=0;i<24;i++)barsEl.appendChild(document.createElement('i'));
+let ac=null,master,an,playing=false,timer=null,step=0,nextT=0,crackleSrc=null;
+const BPM=72,SPB=60/BPM/2; // eighth notes
+const CHORDS=[["Cmaj7",[48,52,55,59,64]],["Am9",[45,52,55,59,62]],["Fmaj7",[41,48,52,57,60]],["G13",[43,50,53,57,64]]];
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function setup(){
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  master=ac.createGain();master.gain.value=document.getElementById('vol').value/100*.6;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=8000;
+  an=ac.createAnalyser();an.fftSize=64;
+  master.connect(lp);lp.connect(an);an.connect(ac.destination);
+}
+function pad(notes,t,d){
+  notes.forEach((n,i)=>{
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.type=i%2?'sine':'triangle';o.frequency.value=mtof(n);o.detune.value=(Math.random()-.5)*12;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.4);g.gain.linearRampToValueAtTime(.035,t+d*.7);g.gain.linearRampToValueAtTime(0,t+d);
+    o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);
+  });
+}
+function kick(t){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(40,t+.18);g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(g);g.connect(master);o.start(t);o.stop(t+.32);}
+function noiseBuf(len){const b=ac.createBuffer(1,ac.sampleRate*len,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b;}
+let hatBuf;
+function hat(t,v){const s=ac.createBufferSource();s.buffer=hatBuf;const f=ac.createBiquadFilter();f.type='highpass';f.frequency.value=7000;const g=ac.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+.07);}
+function snare(t){const s=ac.createBufferSource();s.buffer=hatBuf;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;const g=ac.createGain();g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+.2);}
+function crackle(){
+  const len=3,b=ac.createBuffer(1,ac.sampleRate*len,ac.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++){d[i]=(Math.random()<.0008?(Math.random()*2-1)*.8:0)+(Math.random()*2-1)*.012;}
+  crackleSrc=ac.createBufferSource();crackleSrc.buffer=b;crackleSrc.loop=true;
+  const g=ac.createGain();g.gain.value=.5;crackleSrc.connect(g);g.connect(master);crackleSrc.start();
+}
+function schedule(){
+  while(nextT<ac.currentTime+.3){
+    const s=step%16,bar=Math.floor(step/16)%4;
+    if(s===0){pad(CHORDS[bar][1],nextT,SPB*16);document.getElementById('now').textContent=`Playing · ${CHORDS[bar][0]} · ${BPM} BPM`;}
+    if(s===0||s===10)kick(nextT);
+    if(s===4||s===12)snare(nextT+0.02);
+    if(s%2===0)hat(nextT+(s%4===2?0.04:0),s%4===0?.06:.035);
+    nextT+=SPB;step++;
+  }
+}
+function drawBars(){
+  if(!playing){[...barsEl.children].forEach(b=>b.style.height='12%');return;}
+  const d=new Uint8Array(an.frequencyBinCount);an.getByteFrequencyData(d);
+  [...barsEl.children].forEach((b,i)=>b.style.height=Math.max(10,d[i]/255*100)+'%');
+  requestAnimationFrame(drawBars);
+}
+function togglePlay(){
+  if(!ac){setup();hatBuf=noiseBuf(.2);}
+  if(!playing){
+    ac.resume();crackle();nextT=ac.currentTime+.1;step=0;timer=setInterval(schedule,60);playing=true;
+    document.getElementById('playBtn').textContent='Pause';document.getElementById('heroPlay').textContent='Pause couch radio';
+    document.getElementById('vinyl').classList.add('spin');drawBars();
+  }else{
+    clearInterval(timer);if(crackleSrc){crackleSrc.stop();crackleSrc=null;}playing=false;
+    document.getElementById('playBtn').textContent='Play';document.getElementById('heroPlay').textContent='Play couch radio';
+    document.getElementById('vinyl').classList.remove('spin');document.getElementById('now').textContent=`Paused · ${BPM} BPM · key of C`;drawBars();
+  }
+}
+document.getElementById('playBtn').onclick=togglePlay;
+document.getElementById('heroPlay').onclick=togglePlay;
+document.getElementById('vol').oninput=e=>{if(master)master.gain.value=e.target.value/100*.6;};
+
+/* ---------- DEEP THOUGHTS ---------- */
+const THOUGHTS=[
+"If you <em>clean a vacuum cleaner</em>, you become the vacuum cleaner.",
+"Your stomach thinks all potatoes are <em>mashed</em>.",
+"Somewhere out there is the <em>oldest dog alive</em>, and it has no idea.",
+"Every photo of you is a photo of you <em>in the past</em>.",
+"Fire trucks are just <em>water trucks</em> with better branding.",
+"You've never seen your own face. Only <em>reflections and pictures</em>.",
+"A cup of water is just <em>very slow ice</em> waiting for winter.",
+"The person who named the colour orange <em>clearly just looked at an orange</em>.",
+"Your future self is watching you right now <em>through memories</em>.",
+"Teeth are the only bones <em>we clean on purpose</em>.",
+"Somebody had to be the first person to <em>milk a cow</em> and say 'this is fine'.",
+"We are all just <em>ancient stardust</em> worried about emails.",
+"Socks are just <em>shoes for your shoes</em>.",
+"The moon is a <em>rock that follows us around</em> and we just accept it.",
+"Your brain named itself.",
+"Every word you know, <em>someone made up</em> at some point.",
+"Pizza is a <em>circle</em>, cut into <em>triangles</em>, delivered in a <em>square</em>.",
+"Bread is just <em>a sponge</em> you are allowed to eat.",
+"There's a song you'll love that <em>hasn't been written yet</em>.",
+"Lightning is the sky <em>taking a selfie</em> with flash on.",
+"Your skeleton is <em>wet</em> right now.",
+"Night is just the planet's <em>shadow</em>.",
+"Blinking is a <em>tiny nap</em> for your eyes, thousands of times a day.",
+"If time is money, an <em>ATM is a time machine</em>.",
+"Trees are just the Earth <em>reaching for the sun</em> really slowly.",
+"Every chair you've ever sat on was <em>designed for a butt</em> that isn't yours.",
+"The ocean is <em>blue soup</em> with fish in it.",
+"You are the only you that <em>has ever existed</em>. Ever.",
+"Somewhere, someone is <em>falling asleep to a podcast</em> about sleep.",
+"Laughing is just <em>controlled screaming</em> about something nice.",
+"Clouds are <em>sky floaties</em> made of water that forgot how to fall.",
+"An egg is a <em>chicken that hasn't loaded yet</em>.",
+"Music is just air <em>wiggling in a pattern</em> your brain likes.",
+"Your shadow is the only friend who <em>copies everything you do</em>.",
+"Mirrors don't flip left and right. They flip <em>front and back</em>.",
+"Gravity is the universe <em>giving everything a hug</em>."
+];
+let tOrder=[...THOUGHTS.keys()].sort(()=>Math.random()-.5),tIdx=0;
+function think(){
+  document.getElementById('thought').innerHTML=THOUGHTS[tOrder[tIdx]];
+  document.getElementById('tcount').textContent=`thought ${tIdx+1} of ${THOUGHTS.length}`;
+  tIdx=(tIdx+1)%THOUGHTS.length;
+}
+document.getElementById('thinkBtn').onclick=think;
+document.getElementById('copyBtn').onclick=()=>{
+  const el=document.getElementById('thought'),txt=el.textContent,msg=document.getElementById('copyMsg');
+  navigator.clipboard?.writeText(txt).then(()=>{msg.textContent='Copied. Go blow someone else\'s mind.';},()=>{
+    const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);msg.textContent='Selected. Press Ctrl+C to copy.';
+  });
+};
+think();
+
+/* ---------- TRANCE TUNNEL ---------- */
+const tr={on:false,timer:null,step:0,next:0,bus:null,filt:null,raf:null,t:0};
+const TBPM=138,T16=60/TBPM/4;
+const TPROG=[[57,60,64,69],[53,57,60,65],[48,52,55,60],[55,59,62,67]];
+function trAudioSetup(){
+  if(!ac){setup();hatBuf=noiseBuf(.2);}
+  if(!tr.bus){
+    tr.bus=ac.createGain();tr.bus.gain.value=document.getElementById('vol').value/100*.55;
+    tr.filt=ac.createBiquadFilter();tr.filt.type='lowpass';tr.filt.frequency.value=900;tr.filt.Q.value=7;
+    tr.filt.connect(tr.bus);tr.bus.connect(an);
+  }
+}
+function tVoice(type,freq,t,d,g0,dest,det){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=freq;if(det)o.detune.value=det;g.gain.setValueAtTime(g0,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest);o.start(t);o.stop(t+d+.02);}
+function trKick(t){const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);g.gain.setValueAtTime(1,t);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.connect(g);g.connect(tr.bus);o.start(t);o.stop(t+.34);}
+function trHat(t,v,len){const s=ac.createBufferSource();s.buffer=hatBuf;const f=ac.createBiquadFilter();f.type='highpass';f.frequency.value=8000;const g=ac.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+len);s.connect(f);f.connect(g);g.connect(tr.bus);s.start(t);s.stop(t+len+.01);}
+const ARP=[0,1,2,3,2,1,0,2,1,3,2,0,3,2,1,2];
+function trSchedule(){
+  while(tr.next<ac.currentTime+.25){
+    const s=tr.step%16,ch=TPROG[Math.floor(tr.step/32)%4],t=tr.next;
+    if(s%4===0)trKick(t);
+    if(s%4===2){trHat(t,.14,.12);tVoice('sawtooth',mtof(ch[0]-24),t,.16,.22,tr.bus);}
+    if(s%2===1)trHat(t,.04,.03);
+    const n=ch[ARP[s]]+(Math.floor(tr.step/64)%2?12:0);
+    tVoice('sawtooth',mtof(n),t,.15,.07,tr.filt,-9);tVoice('sawtooth',mtof(n),t,.15,.07,tr.filt,9);
+    if(s===0&&tr.step%32===0)ch.forEach(m=>tVoice('triangle',mtof(m),t,T16*30,.035,tr.bus));
+    tr.filt.frequency.setTargetAtTime(500+(Math.sin(tr.step/48)+1)*2200,t,.15);
+    tr.next+=T16;tr.step++;
+  }
+}
+function trMusicStart(){
+  trAudioSetup();if(playing)togglePlay();ac.resume();
+  tr.next=ac.currentTime+.1;tr.step=0;tr.timer=setInterval(trSchedule,50);
+}
+function trMusicStop(){clearInterval(tr.timer);tr.timer=null;}
+document.getElementById('vol').addEventListener('input',e=>{if(tr.bus)tr.bus.gain.value=e.target.value/100*.55;});
+
+const tOv=document.getElementById('trance'),tc=document.getElementById('tCanvas'),tx=tc.getContext('2d');
+const MANTRAS=["Stare into the centre","Let your shoulders drop","You are exactly where you need to be","Breathe slow","Ride the colours","Everything is fine","Melt into the couch"];
+let mIdx=0,mTimer=null;
+function tResize(){const d=Math.min(devicePixelRatio||1,1.5);tc.width=innerWidth*d;tc.height=innerHeight*d;}
+function tDraw(){
+  const W=tc.width,H=tc.height,cx=W/2,cy=H/2,maxR=Math.hypot(W,H)/2;
+  let energy=0;
+  if(an&&tr.timer){const d=new Uint8Array(an.frequencyBinCount);an.getByteFrequencyData(d);energy=(d[1]+d[2]+d[3])/765;}
+  tx.fillStyle='rgba(0,0,0,.22)';tx.fillRect(0,0,W,H);
+  tx.save();tx.translate(cx,cy);
+  const rings=22,spacing=maxR/rings,speed=maxR*.0035*(1+energy*.8);
+  for(let i=0;i<rings;i++){
+    const r=((i*spacing+tr.t*speed)%maxR)+4,sides=6;
+    const hue=(i*17+tr.t*1.2)%360,rot=tr.t*.004+i*.09+energy*.2;
+    tx.beginPath();
+    for(let k=0;k<=sides;k++){const a=rot+k/sides*Math.PI*2,rr=r*(1+energy*.12*Math.sin(k+tr.t*.05));k?tx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):tx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr);}
+    tx.strokeStyle=`hsla(${hue},100%,${55+energy*20}%,${Math.min(1,r/maxR*1.6)})`;
+    tx.lineWidth=Math.max(1.5,r/22);tx.shadowBlur=18;tx.shadowColor=`hsl(${hue},100%,60%)`;tx.stroke();
+  }
+  const g=tx.createRadialGradient(0,0,0,0,0,maxR*.12*(1+energy));
+  g.addColorStop(0,`hsla(${(tr.t*1.2+180)%360},100%,80%,.9)`);g.addColorStop(1,'rgba(0,0,0,0)');
+  tx.shadowBlur=0;tx.fillStyle=g;tx.beginPath();tx.arc(0,0,maxR*.12*(1+energy),0,Math.PI*2);tx.fill();
+  tx.restore();
+  tr.t+=1;
+  tr.raf=requestAnimationFrame(tDraw);
+}
+function enterTrance(){
+  tOv.hidden=false;tResize();tx.fillStyle='#000';tx.fillRect(0,0,tc.width,tc.height);tr.t=0;
+  if(document.getElementById('tMusic').checked)trMusicStart();
+  document.getElementById('tBpm').textContent=document.getElementById('tMusic').checked?'138 BPM':'silent';
+  tDraw();
+  const m=document.getElementById('tMantra');mIdx=0;m.textContent=MANTRAS[0];m.style.opacity=1;
+  mTimer=setInterval(()=>{m.style.opacity=0;setTimeout(()=>{mIdx=(mIdx+1)%MANTRAS.length;m.textContent=MANTRAS[mIdx];m.style.opacity=1;},1200);},7000);
+  tOv.requestFullscreen?.().catch(()=>{});
+  document.getElementById('tExit').focus();
+}
+function exitTrance(){
+  if(tOv.hidden)return;
+  tOv.hidden=true;cancelAnimationFrame(tr.raf);clearInterval(mTimer);trMusicStop();
+  if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});
+  document.getElementById('tranceBtn').focus();
+}
+document.getElementById('tranceBtn').onclick=enterTrance;
+document.getElementById('heroTrance').onclick=enterTrance;
+document.getElementById('tExit').onclick=exitTrance;
+addEventListener('keydown',e=>{if(e.key==='Escape')exitTrance();});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&!tOv.hidden)tResize();});
+addEventListener('resize',()=>{if(!tOv.hidden)tResize();});
+
+/* ---------- KALEIDOSCOPE ---------- */
+const kc=document.getElementById('kaleido'),kx=kc.getContext('2d');
+let kW=0,kH=0,khue=300,kdown=false,klast=null,kAutoRaf=null;
+function kSize(){
+  const r=kc.getBoundingClientRect();if(Math.round(r.width)===kW)return false;
+  const d=Math.min(devicePixelRatio||1,2);kW=Math.round(r.width);kH=Math.round(r.height);
+  kc.width=kW*d;kc.height=kH*d;kx.setTransform(d,0,0,d,0,0);kClear();return true;
+}
+function kClear(){kx.save();kx.shadowBlur=0;kx.fillStyle='#0c0616';kx.fillRect(0,0,kW,kH);kx.restore();}
+function kLine(a,b){
+  const n=+document.getElementById('ksym').value,cx=kW/2,cy=kH/2;
+  const col=`hsl(${khue%360},100%,62%)`;
+  kx.lineWidth=3;kx.lineCap='round';kx.strokeStyle=col;kx.shadowColor=col;kx.shadowBlur=14;
+  for(let i=0;i<n;i++){
+    for(const m of [1,-1]){
+      kx.save();kx.translate(cx,cy);kx.rotate(i/n*Math.PI*2);kx.scale(1,m);
+      kx.beginPath();kx.moveTo(a.x-cx,a.y-cy);kx.lineTo(b.x-cx,b.y-cy);kx.stroke();kx.restore();
+    }
+  }
+  khue+=1.6;
+}
+function kPt(e){const r=kc.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+kc.addEventListener('pointerdown',e=>{cancelAnimationFrame(kAutoRaf);kdown=true;klast=kPt(e);kc.setPointerCapture(e.pointerId);});
+kc.addEventListener('pointermove',e=>{if(!kdown)return;const p=kPt(e);kLine(klast,p);klast=p;});
+['pointerup','pointercancel'].forEach(ev=>kc.addEventListener(ev,()=>{kdown=false;}));
+function kSwirl(frames){
+  cancelAnimationFrame(kAutoRaf);let f=0;const cx=kW/2,cy=kH/2,R=Math.min(kW,kH)*.42;
+  let prev=null;const k1=2+Math.floor(Math.random()*4),k2=3+Math.floor(Math.random()*5);
+  (function step(){
+    for(let s=0;s<3;s++){
+      const t=(f*3+s)/40;
+      const p={x:cx+Math.cos(t)*R*(.35+.6*Math.abs(Math.sin(t*k1/k2))),y:cy+Math.sin(t*1.0)*R*(.35+.6*Math.abs(Math.cos(t*k2/7)))};
+      if(prev)kLine(prev,p);prev=p;
+    }
+    if(++f<frames)kAutoRaf=requestAnimationFrame(step);
+  })();
+}
+document.getElementById('kAuto').onclick=()=>kSwirl(180);
+document.getElementById('kClear').onclick=()=>{cancelAnimationFrame(kAutoRaf);kClear();};
+kSize();
+// sample mandala so the canvas isn't empty on load
+(function seed(){const cx=kW/2,cy=kH/2,R=Math.min(kW,kH)*.4;let prev=null;for(let i=0;i<=260;i++){const t=i/260*Math.PI*6,r=R*(.25+.75*Math.abs(Math.sin(t*1.5)));const p={x:cx+Math.cos(t*.5)*r,y:cy+Math.sin(t*.5)*r};if(prev)kLine(prev,p);prev=p;}})();
+addEventListener('resize',()=>{kSize();});
+
+/* ---------- BREATHE ORB ---------- */
+const orb=document.getElementById('orb'),orbTxt=document.getElementById('orbTxt');
+const PHASES=[["Breathe in",4,1],["Hold",4,1],["Breathe out",6,.55]];
+let bOn=false,bTimer=null,bPhase=0,bRounds=0;
+function bStep(){
+  const [txt,sec,sc]=PHASES[bPhase];
+  orb.style.transitionDuration=sec+'s';orb.style.transform=`scale(${sc})`;orbTxt.textContent=txt;
+  bTimer=setTimeout(()=>{bPhase=(bPhase+1)%3;if(bPhase===0){bRounds++;document.getElementById('bMeta').textContent=`${bRounds} round${bRounds===1?'':'s'} · nice and slow`;}bStep();},sec*1000);
+}
+document.getElementById('breatheBtn').onclick=()=>{
+  bOn=!bOn;
+  if(bOn){bPhase=0;bStep();document.getElementById('breatheBtn').textContent='Stop';}
+  else{clearTimeout(bTimer);orb.style.transitionDuration='1s';orb.style.transform='scale(.55)';orbTxt.textContent='Ready';document.getElementById('breatheBtn').textContent='Start breathing';}
+};
+
+/* ---------- MUNCHIE CATCH ---------- */
+const gc=document.getElementById('game'),gx=gc.getContext('2d');
+const SNACKS=["🍕","🍩","🍪","🌮","🍟","🍫","🥨","🍦","🍔","🌯"];
+let gW=0,gH=0,gRun=false,gRaf=null,items=[],px=0,score=0,lives=3,best=0,spawnT=0,gSpeed=1,keys={},lastTs=0;
+try{best=+localStorage.getItem('cc-best')||0;}catch(e){}
+function gSize(){const r=gc.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);gW=r.width;gH=r.height;gc.width=gW*d;gc.height=gH*d;gx.setTransform(d,0,0,d,0,0);if(!px)px=gW/2;if(!gRun)gIdle();}
+function gHud(){document.getElementById('gScore').textContent=`Score ${score} · Lives ${lives} · Best ${best}`;}
+function drawCouch(x){
+  const y=gH-38,w=86,h=26;
+  gx.save();gx.shadowColor='#ff3df2';gx.shadowBlur=18;gx.fillStyle='#ff3df2';
+  gx.beginPath();gx.roundRect(x-w/2,y,w,h,8);gx.fill();
+  gx.shadowBlur=0;gx.fillStyle='#c42bbd';gx.beginPath();gx.roundRect(x-w/2-6,y-10,14,h+10,6);gx.roundRect(x+w/2-8,y-10,14,h+10,6);gx.fill();
+  gx.fillStyle='#ff8cf8';gx.beginPath();gx.roundRect(x-w/2+10,y+4,w/2-14,10,4);gx.roundRect(x+4,y+4,w/2-14,10,4);gx.fill();
+  gx.restore();
+}
+function gBg(){gx.fillStyle='#0c0616';gx.fillRect(0,0,gW,gH);gx.fillStyle='rgba(155,92,255,.18)';for(let i=0;i<40;i++){gx.fillRect((i*97)%gW,(i*53)%gH,2,2);}}
+function gText(big,small){gx.textAlign='center';gx.fillStyle='#f4ecff';gx.font='34px "Bagel Fat One", system-ui';gx.shadowColor='#c4ff4d';gx.shadowBlur=16;gx.fillText(big,gW/2,gH/2-10);gx.shadowBlur=0;gx.font='15px Outfit, system-ui';gx.fillStyle='#b3a4cf';gx.fillText(small,gW/2,gH/2+22);}
+function gIdle(over){
+  gBg();gx.font='30px system-ui';gx.textAlign='center';
+  ["🍕","🍩","⏰","🌮","🍪"].forEach((s,i)=>gx.fillText(s,gW*(.15+i*.175),60+(i%2)*40));
+  drawCouch(px||gW/2);
+  over?gText('Game over',`You scored ${score}. Press Start to go again.`):gText('Munchie Catch','Press Start game');
+}
+function gStart(){
+  items=[];score=0;lives=3;gSpeed=1;spawnT=0;gRun=true;lastTs=performance.now();gHud();
+  document.getElementById('gameBtn').textContent='Restart';cancelAnimationFrame(gRaf);gRaf=requestAnimationFrame(gLoop);
+}
+function gLoop(ts){
+  const dt=Math.min(.05,(ts-lastTs)/1000);lastTs=ts;
+  if(keys.ArrowLeft)px-=520*dt;if(keys.ArrowRight)px+=520*dt;px=Math.max(43,Math.min(gW-43,px));
+  spawnT-=dt;if(spawnT<=0){const bad=Math.random()<.18;items.push({x:24+Math.random()*(gW-48),y:-20,v:(110+Math.random()*80)*gSpeed,e:bad?"⏰":SNACKS[Math.floor(Math.random()*SNACKS.length)],bad});spawnT=Math.max(.35,.9/gSpeed);}
+  gBg();gx.font='30px system-ui';gx.textAlign='center';
+  const cy=gH-38;
+  items=items.filter(it=>{
+    it.y+=it.v*dt;gx.fillText(it.e,it.x,it.y);
+    if(it.y>cy-6&&it.y<cy+26&&Math.abs(it.x-px)<52){if(it.bad){lives--;}else{score++;gSpeed+=.04;}gHud();return false;}
+    if(it.y>gH+20){if(!it.bad){lives--;gHud();}return false;}
+    return true;
+  });
+  drawCouch(px);
+  if(lives<=0){gRun=false;if(score>best){best=score;try{localStorage.setItem('cc-best',best);}catch(e){}}gHud();gIdle(true);document.getElementById('gameBtn').textContent='Start game';return;}
+  gRaf=requestAnimationFrame(gLoop);
+}
+gc.addEventListener('pointermove',e=>{const r=gc.getBoundingClientRect();px=e.clientX-r.left;if(!gRun)gIdle();});
+gc.addEventListener('pointerdown',e=>{const r=gc.getBoundingClientRect();px=e.clientX-r.left;});
+addEventListener('keydown',e=>{if(gRun&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){keys[e.key]=true;e.preventDefault();}});
+addEventListener('keyup',e=>{keys[e.key]=false;});
+document.getElementById('gameBtn').onclick=gStart;
+gSize();gHud();
+addEventListener('resize',()=>{if(Math.abs(gc.getBoundingClientRect().width-gW)>2)gSize();});
+</script>
+
+</body>
+</html>
