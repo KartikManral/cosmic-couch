@@ -1172,6 +1172,7 @@ function showPicker(){
 }
 function enterTunnel(i){
   TR.idx=(i+TUNNELS.length)%TUNNELS.length;TR.mode='tunnel';const tun=TUNNELS[TR.idx];
+  window.va && window.va('event',{name:'tunnel_open',data:{tunnel:tun.slug}});
   flash();$('tPicker').hidden=true;$('tHud').hidden=false;
   $('tName').textContent=tun.name;$('tMeta').textContent=`${tun.genre} · ${tun.bpm} BPM`;
   if($('tMusic').checked)playProgram(tun.prog,'tunnel',TR.idx);else stopProgram(true);
@@ -1220,7 +1221,7 @@ const barsEl=$('bars');for(let i=0;i<28;i++)barsEl.appendChild(document.createEl
 $('stations').innerHTML=STATIONS.map((s,i)=>`<button type="button" class="stn" aria-pressed="${i===0}"><b>${s.name}</b><small>${s.tag} BPM</small></button>`).join('');
 [...$('stations').children].forEach((b,i)=>b.onclick=()=>{station=i;playProgram(STATIONS[i].f,'radio',i);});
 function radioOn(){return !!(SEQ.prog&&SEQ.prog.kind==='radio');}
-function toggleRadio(){if(radioOn())stopProgram();else playProgram(STATIONS[station].f,'radio',station);}
+function toggleRadio(){if(radioOn())stopProgram();else{window.va && window.va('event',{name:'radio_on',data:{station:STATIONS[station].name}});playProgram(STATIONS[station].f,'radio',station);}}
 $('playBtn').onclick=toggleRadio;$('heroPlay').onclick=toggleRadio;
 $('vol').oninput=()=>{if(AU.out)AU.out.gain.setTargetAtTime(vol()*.85,AU.ctx.currentTime,.05);};
 function syncUI(){
@@ -1512,8 +1513,9 @@ function thoughtCard(html,num){
   watermark(x,W,H,58);
   return c;
 }
-$('shareBtn').onclick=()=>{const i=(tIdx-1+THOUGHTS.length)%THOUGHTS.length;showShare(thoughtCard(THOUGHTS[tOrder[i]],tOrder[i]+1),'cosmic-couch-thought.png','Your deep thought is ready');};
+$('shareBtn').onclick=()=>{window.va && window.va('event',{name:'share_click',data:{type:'thought'}});const i=(tIdx-1+THOUGHTS.length)%THOUGHTS.length;showShare(thoughtCard(THOUGHTS[tOrder[i]],tOrder[i]+1),'cosmic-couch-thought.png','Your deep thought is ready');};
 $('kSave').onclick=()=>{
+  window.va && window.va('event',{name:'share_click',data:{type:'mandala'}});
   const s=kc.width,h=kc.height,pad=Math.round(h*.16),c=document.createElement('canvas');c.width=s;c.height=h+pad;const x=c.getContext('2d');
   x.fillStyle='#0c0616';x.fillRect(0,0,s,h+pad);x.drawImage(kc,0,0);watermark(x,s,h+pad,Math.round(pad*.32));
   showShare(c,'cosmic-couch-mandala.png','Your mandala is ready');
