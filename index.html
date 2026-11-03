@@ -1206,39 +1206,6 @@ const FS_DREAD=`void main(){
   float swirl=.5+.5*sin(sp*6.2831853*2.-T*.3+z*2.);
   vec3 col=pal(z*.08+.5,vec3(.4,.2,.5),vec3(.4,.3,.4),vec3(1.,1.,1.),vec3(.1,.4,.6))*(.2+.8*swirl);
   col*=smoothstep(0.,.45,r);
-  float c=mod(T,42.)-36.;
-  if(S>.5&&c>-.15&&c<1.3){
-    float grow=clamp((c+.15)/.25,0.,1.);
-    float sc=mix(.12,.75,pow(grow,.3));
-    float fade=1.-smoothstep(.9,1.3,c);
-    vec2 f=uv/sc;
-    f.x+=sin(c*90.)*.012*step(0.,c);
-    float head=1.-smoothstep(.97,.985,length(f*vec2(1.,1.2)));
-    vec2 el=f-vec2(-.3,.15), er=f-vec2(.3,.15);
-    el=rot(.45)*el; er=rot(-.45)*er;
-    float eyes=max(1.-smoothstep(.22,.23,length(el*vec2(1.,2.4))),1.-smoothstep(.22,.23,length(er*vec2(1.,2.4))));
-    float xs=f.x;
-    float ylo=-.6+.5*xs*xs;
-    float yhi=-.22+.4*xs*xs+.04*sin(xs*30.);
-    float mid=(ylo+yhi)*.5;
-    float grin=step(ylo,f.y)*step(f.y,yhi)*step(abs(xs),.95-abs(f.y-mid)*2.2);
-    float teeth=step(f.y,yhi-.02)*step(yhi-.1,f.y)*grin*step(.5,fract(xs*9.));
-    vec3 skin=vec3(.74,.84,.72)*(.55+.45*(1.-length(f)));
-    float sock=max(1.-smoothstep(0.,.3,length((f-vec2(-.3,.02))*vec2(1.,1.4))),1.-smoothstep(0.,.3,length((f-vec2(.3,.02))*vec2(1.,1.4))));
-    skin*=1.-.45*sock;
-    float scar=(1.-smoothstep(0.,.018,abs(f.y+.12+.9*(abs(f.x)-.5))))*step(.42,abs(f.x))*step(abs(f.x),.8)*step(f.y,0.);
-    skin=mix(skin,vec3(.25,.05,.08),scar*.8);
-    vec3 face=mix(skin,vec3(.02,0.,.02),eyes);
-    face=mix(face,vec3(.55,.01,.04),grin);
-    face=mix(face,vec3(.95),teeth);
-    face=mix(vec3(.02),face,head);
-    col=mix(col,face,head*fade);
-    vec3 hairC=vec3(.12,.5,.16)*(.55+.45*sin(f.x*40.));
-    float hm=step(.78,f.y)*step(f.y,1.05+.14*sin(f.x*18.))*(1.-head);
-    col=mix(col,hairC,hm*fade);
-    col*=1.-.7*fade*smoothstep(.15,.9,length(uv));
-    col+=vec3(.25,0.,0.)*fade*(1.-head);
-  }
   gl_FragColor=vec4(clamp(col,0.,1.),1.);
 }`;
 
@@ -1249,20 +1216,10 @@ function progDread(){
   P.init=bus=>{K=ch(bus,{duck:false,gain:.7});HH=ch(bus,{gain:.25,pan:.2});BS=ch(bus,{gain:.5});PD=ch(bus,{gain:.4,rev:.6});SC=ch(bus,{gain:.9,rev:.5,duck:false});RS=ch(bus,{gain:.8,rev:.6,duck:false});
     drone(bus,mtof(28),{gain:.07,type:'sine',dst:ch(bus,{gain:1,rev:.4})});};
   P.step=(s,t,bus,spb)=>{
-    const sec=s*spb,cyc=sec%42,bar=Math.floor(s/16),b=s%16,cd=CH[bar%4];
+    const bar=Math.floor(s/16),b=s%16,cd=CH[bar%4];
     if(b===0)cd.forEach(n=>synth(PD,t,mtof(n+12),spb*16,{voices:3,detune:8,cut:900,q:.5,a:1.2,d:1,s:.8,r:2,gain:.05}));
-    if(cyc<36&&b%4===0)kick(K,t,{f0:90,f1:40,dec:.35,gain:.45});
-    if(cyc<36&&b%8===4)hat(HH,t,{gain:.03,dec:.04});
-    if(cyc>=32&&cyc<36&&!TR.calm){
-      const k=(cyc-32)/4;
-      noiseHit(RS,t,{type:'bandpass',freq:300+k*2600,q:2.5+k*3,dec:.14,gain:.05+k*.12});
-    }
-    if(cyc>=36&&cyc<36+spb&&!TR.calm){
-      kick(SC,t,{f0:70,f1:22,dec:1.1,gain:1,click:.9});
-      noiseHit(SC,t,{type:'highpass',freq:2500,q:.4,dec:.6,gain:.45});
-      synth(SC,t,mtof(38),spb*12,{type:'sawtooth',cut:600,cutEnv:3000,q:6,a:.001,d:.5,s:0,r:.8,gain:.25});
-      pulse(t,1.5);
-    }
+    if(b%4===0)kick(K,t,{f0:90,f1:40,dec:.35,gain:.45});
+    if(b%8===4)hat(HH,t,{gain:.03,dec:.04});
   };
   return P;
 }
@@ -1305,7 +1262,7 @@ const TUNNELS=[
    sw:'radial-gradient(circle at 50% 35%,#e8efff 0,#7a8fd1 25%,#0b1030 70%)',
    mantras:['Let it rain','Nothing to catch','The moon is watching kindly','Soft landing','Stay a while']},
   {id:'dread',slug:'dread',name:"Don't Look Back",genre:'Dark psytrance',bpm:100,fs:FS_DREAD,prog:progDread,thumbT:37.5,
-   desc:'A slow, hypnotic spiral. Every so often, something fast rushes straight at you. Calm mode turns the scare off.',
+   desc:'A slow, hypnotic dark spiral over a deep, steady groove.',
    sw:'radial-gradient(circle,#000 0,#1a0010 30%,#7a0a2a 60%,#2a0030 90%)',
    mantras:['Keep looking','Something is behind you','Almost there','Do not look away','Breathe in, wait']}
 ];
