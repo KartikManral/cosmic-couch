@@ -238,7 +238,7 @@ footer b{color:var(--fg);font-weight:600}
     <section class="station wide trance-card" aria-labelledby="tr-h">
       <div class="st-head">
         <h2 id="tr-h">Trance Tunnels</h2>
-        <span class="label">6 worlds · full-screen</span>
+        <span class="label">10 worlds · full-screen</span>
       </div>
       <p class="sub">Pick a tunnel and fall in. Each one has its own visuals and its own soundtrack, and the visuals move with the beat. Arrow keys hop between tunnels, Esc brings you back.</p>
       <div class="tunnels" id="tunnelList"></div>
@@ -1095,6 +1095,152 @@ document.addEventListener('click',e=>{if(e.target.closest('.station,button,a,inp
 /* =========================================================
    TRANCE TUNNELS
    ========================================================= */
+
+// 6. Aurora Corridor: melodic techno, green and blue northern lights
+const FS_AURORA=`void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  float r=length(uv)+.001;
+  float a=atan(uv.y,uv.x);
+  float z=.35/r;
+  float w=sin(a*4.+z*1.6-T*1.1+B*1.5)*.5+.5;
+  float v=sin(z*2.2-T*2.+sin(a*2.-T*.5)*1.5)*.5+.5;
+  vec3 col=mix(vec3(.01,.06,.05),vec3(.15,1.,.55),w*v);
+  col=mix(col,vec3(.25,.55,1.),smoothstep(.55,1.,v)*.6);
+  col*=smoothstep(0.,.6,r)*(.7+.5*P+.3*B);
+  col+=vec3(.6,1.,.8)*pow(max(0.,1.-abs(fract(z*.5-T*.8)-.5)*6.),4.)*.2*(.5+H);
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+// 7. Ember Spiral: psytrance, a log spiral of burning arms
+const FS_EMBER=`void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  float r=length(uv)+.001;
+  float a=atan(uv.y,uv.x);
+  float spiral=a/6.2831853+log(r)*.6;
+  float arms=fract(spiral*3.-T*.35);
+  float band=smoothstep(0.,.25,arms)*(1.-smoothstep(.25,.55,arms));
+  float glow=exp(-r*1.4)+.2;
+  vec3 col=mix(vec3(.12,.01,0.),vec3(1.,.35,.05),band);
+  col=mix(col,vec3(1.,.9,.4),band*band*step(.5,fract(spiral*9.-T*.6))*.6);
+  col*=glow*(1.+1.2*P+.6*B);
+  col+=vec3(1.,.2,.1)*exp(-r*5.)*.5*(1.+B+H*.5);
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+// 8. Lunar Rain: downtempo, silver drops falling past a pale moon
+const FS_LUNAR=`void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  vec3 col=vec3(.02,.03,.08);
+  for(int k=0;k<3;k++){
+    float fk=float(k);
+    float sc=6.+fk*5.;
+    vec2 g=uv*sc;
+    g.y+=T*(.6+fk*.35);
+    vec2 id=floor(g);
+    vec2 f=fract(g)-.5;
+    float h=hash(id+fk*17.);
+    float drop=1.-smoothstep(0.,.12,length(f*vec2(1.,.5)));
+    vec3 c=mix(vec3(.6,.8,1.),vec3(.85,.7,1.),h);
+    col+=c*drop*(.35+.35*h)*(.6+.6*B)*(1.-fk*.25);
+  }
+  float moon=1.-smoothstep(0.,.35,length(uv-vec2(0.,.25)));
+  col+=vec3(.9,.9,1.)*moon*.15*(1.+P*.5);
+  col+=vec3(.2,.25,.5)*(1.-smoothstep(0.,1.,length(uv)))*.1;
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+
+function progAurora(){
+  const bpm=124,beat=60/bpm,P={bpm,fx:{revTime:2.5,revDecay:1.2,revLevel:.4,delayTime:beat*.75,feedback:.45,delayLevel:.35,delayTone:2600}};
+  const CH=[[50,53,57,60],[48,52,55,59],[46,50,53,57],[45,48,52,55]],RT=[38,36,34,33];
+  let K,HH,BS,PD,ST;
+  P.init=bus=>{K=ch(bus,{duck:false,gain:.8});HH=ch(bus,{gain:.35,pan:.3});BS=ch(bus,{gain:.55});PD=ch(bus,{gain:.4,rev:.5});ST=ch(bus,{gain:.5,dly:.4,rev:.3});
+    drone(bus,mtof(26),{gain:.05,type:'triangle',dst:ch(bus,{gain:1,rev:.3})});};
+  P.step=(s,t,bus,spb)=>{
+    const bar=Math.floor(s/16),b=s%16,ci=Math.floor(bar/2)%4,cd=CH[ci],brk=Math.floor(bar/8)%4===3;
+    if(!brk&&b%4===0){kick(K,t,{f0:120,f1:44,dec:.42,gain:.9,click:.1});pump(bus,t,.45,.25);pulse(t,.8);}
+    if(!brk&&b%2===0)hat(HH,t,{gain:b%4===2?.06:.03,dec:.03});
+    if(!brk&&b%4===2)synth(BS,t,mtof(RT[ci]+12),spb*1.6,{cut:450,cutEnv:1000,q:4,a:.004,d:.15,s:.3,r:.06,gain:.4});
+    if(b===0||b===8)cd.forEach(n=>synth(PD,t,mtof(n+12),spb*15,{voices:3,detune:8,cut:1400,q:.6,a:.3,d:.8,s:.8,r:1.2,gain:.05}));
+    if(b===6||(b===14&&chance(.5))){synth(ST,t,mtof(cd[(b/2)%4]+24),spb*1.2,{type:'triangle',cut:3000,cutEnv:1500,q:1,a:.003,d:.2,s:.2,r:.1,gain:.12});if(brk)pulse(t,.4);}
+  };
+  return P;
+}
+function progEmber(){
+  const bpm=140,beat=60/bpm,P={bpm,fx:{revTime:1.4,revDecay:.7,revLevel:.35,delayTime:beat*.375,feedback:.5,delayLevel:.4,delayTone:3000}};
+  const CH=[38,36,41,43];
+  let K,HH,BS,LD,CL;
+  P.init=bus=>{K=ch(bus,{duck:false,gain:.95});HH=ch(bus,{gain:.4,pan:-.2});BS=ch(bus,{gain:.6});LD=ch(bus,{gain:.3,dly:.5,rev:.3});CL=ch(bus,{gain:.5,rev:.4});};
+  P.step=(s,t,bus,spb)=>{
+    const bar=Math.floor(s/16),b=s%16,root=CH[bar%4],brk=Math.floor(bar/8)%4===3;
+    if(!brk&&b%4===0){kick(K,t,{f0:140,f1:40,dec:.35,gain:1,click:.2});pump(bus,t,.5,.2);pulse(t,1);}
+    if(!brk&&b%4===2)hat(HH,t,{gain:.07,dec:.025});
+    if(!brk)synth(BS,t,mtof(root+(b%4===1?12:0)),spb*.9,{type:'sawtooth',cut:350+(b%8)*60,cutEnv:1200,q:6,a:.002,d:.08,s:.25,r:.03,gain:.3});
+    if(!brk&&(b===4||b===12))clap(CL,t,{gain:.4});
+    if(!brk&&b%8===0&&bar%2===1)synth(LD,t,mtof([root+24,root+27,root+31][bar%3]),spb*6,{voices:2,detune:14,cut:3200,cutEnv:1500,q:3,a:.005,d:.2,s:.5,r:.1,gain:.1});
+  };
+  return P;
+}
+function progLunar(){
+  const P={bpm:90,fx:{revTime:4,revDecay:1.4,revLevel:.6,delayTime:(60/90)*.75,feedback:.4,delayLevel:.3,delayTone:2200}};
+  const CH=[[50,53,57,60],[48,52,55,59],[53,57,60,64],[52,55,59,62]];
+  let BL,KY,RN;
+  P.init=bus=>{KY=ch(bus,{gain:.5,rev:.6});BL=ch(bus,{gain:.4,rev:.7,dly:.4});RN=ch(bus,{gain:.25,rev:.8});
+    bed(bus,AU.noise,{gain:.025,type:'bandpass',freq:1800,q:.6,lfoRate:.1,lfoDepth:900,dst:ch(bus,{gain:1,rev:.7})});
+    drone(bus,mtof(38),{gain:.05,type:'sine',dst:ch(bus,{gain:1,rev:.4})});};
+  P.step=(s,t,bus,spb)=>{
+    const bar=Math.floor(s/16),b=s%16,cd=CH[bar%4];
+    if(b===0){cd.forEach((n,i)=>keys(KY,t+i*.02,mtof(n),spb*14,{gain:.07,bright:.8,decay:2}));pulse(t,.5);}
+    if(b===8&&bar%2===1)keys(KY,t,mtof(cd[2]+12),spb*6,{gain:.05});
+    if((b===6||b===14)&&chance(.5)){bell(BL,t,mtof(cd[(bar+b)%4]+24),{gain:.035,dec:2.5});pulse(t,.35);}
+    if(b===4||b===12)noiseHit(RN,t,{type:'bandpass',freq:1200,q:3,dec:.05,gain:.12});
+  };
+  return P;
+}
+
+
+// 9. Don't Look Back: a slow hypnotic spiral that, every 42 seconds, throws a face at you
+const FS_DREAD=`void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  float r=length(uv)+.001;
+  float a=atan(uv.y,uv.x);
+  float z=.3/r-T*.4;
+  float sp=a/6.2831853*4.+log(r)*.4;
+  float swirl=.5+.5*sin(sp*6.2831853*2.-T*.3+z*2.);
+  vec3 col=pal(z*.08+.5,vec3(.4,.2,.5),vec3(.4,.3,.4),vec3(1.,1.,1.),vec3(.1,.4,.6))*(.2+.8*swirl);
+  col*=smoothstep(0.,.45,r);
+  float c=mod(T,42.)-36.;
+  if(S>.5&&c>-.2&&c<1.4){
+    float grow=clamp(c/.5,0.,1.);
+    float rad=mix(.02,1.6,pow(grow,.35));
+    float fade=1.-smoothstep(1.,1.4,c);
+    float face=(1.-smoothstep(rad-.02,rad,r))*fade;
+    col=mix(col,vec3(.05,0.,.02),face);
+    float iris=(1.-smoothstep(0.,rad*.45,r))*fade*step(0.,c);
+    col=mix(col,vec3(1.,.1,.05),iris*.9);
+    col+=vec3(.9,.1,.1)*exp(-max(c,0.)*5.)*.25*step(0.,c);
+  }
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+
+function progDread(){
+  const bpm=100,beat=60/bpm,P={bpm,fx:{revTime:3,revDecay:1,revLevel:.5,delayTime:beat*.75,feedback:.5,delayLevel:.35,delayTone:1800}};
+  const CH=[[45,48,52,55],[43,47,50,53],[41,45,48,52],[40,43,47,50]];
+  let K,HH,BS,PD,SC;
+  P.init=bus=>{K=ch(bus,{duck:false,gain:.7});HH=ch(bus,{gain:.25,pan:.2});BS=ch(bus,{gain:.5});PD=ch(bus,{gain:.4,rev:.6});SC=ch(bus,{gain:.9,rev:.4,duck:false});
+    drone(bus,mtof(28),{gain:.07,type:'sine',dst:ch(bus,{gain:1,rev:.4})});};
+  P.step=(s,t,bus,spb)=>{
+    const sec=s*spb,cyc=sec%42,bar=Math.floor(s/16),b=s%16,cd=CH[bar%4];
+    if(b===0)cd.forEach(n=>synth(PD,t,mtof(n+12),spb*16,{voices:3,detune:8,cut:900,q:.5,a:1.2,d:1,s:.8,r:2,gain:.05}));
+    if(cyc<36&&b%4===0)kick(K,t,{f0:90,f1:40,dec:.35,gain:.45});
+    if(cyc<36&&b%8===4)hat(HH,t,{gain:.03,dec:.04});
+    if(cyc>=34&&cyc<36&&b%2===0)synth(BS,t,mtof(36+(cyc-34)*12),spb*2,{cut:800,cutEnv:1200,q:3,a:.01,d:.3,s:.5,r:.2,gain:.12});
+    if(cyc>=36&&cyc<36+spb&&!TR.calm){
+      kick(SC,t,{f0:160,f1:30,dec:.6,gain:.9,click:.6});
+      noiseHit(SC,t,{type:'highpass',freq:3000,q:.5,dec:.5,gain:.35});
+      pulse(t,1.5);
+    }
+  };
+  return P;
+}
+
 const TUNNELS=[
   {id:'classic',slug:'original',name:'The Original',genre:'Classic trance',bpm:138,fs:FS_CLASSIC,prog:progClassic,thumbT:8,
    desc:'The first Cosmic Couch tunnel. Neon hexagons pulsing to a 138 BPM beat.',
@@ -1119,7 +1265,23 @@ const TUNNELS=[
   {id:'nebula',slug:'nebula',name:'Nebula Drift',genre:'Ambient space',bpm:60,fs:FS_NEBULA,prog:progNebula,thumbT:40,
    desc:'Float through a living galaxy. No drums, just space.',
    sw:'radial-gradient(circle at 40% 40%,#ffb08a,#7a1b8f 45%,#0b0420 85%)',
-   mantras:['You are made of this','Drift','Nothing to do, nowhere to be','Every star is a sun','Float']}
+   mantras:['You are made of this','Drift','Nothing to do, nowhere to be','Every star is a sun','Float']},
+  {id:'aurora',slug:'aurora',name:'Aurora Corridor',genre:'Melodic techno',bpm:124,fs:FS_AURORA,prog:progAurora,thumbT:12,
+   desc:'A corridor of green and blue northern lights. Warm pads over a steady, rolling beat.',
+   sw:'linear-gradient(180deg,#02100c,#1cff8c 50%,#3f8cff 70%,#02100c)',
+   mantras:['Ride the lights','Green, then blue, then gone','Let the sky breathe','The corridor opens','Slow, steady, warm']},
+  {id:'ember',slug:'ember',name:'Ember Spiral',genre:'Psytrance',bpm:140,fs:FS_EMBER,prog:progEmber,thumbT:15,
+   desc:'A spiral of burning embers that spins with every beat. Rolling bass and bright leads.',
+   sw:'conic-gradient(from 90deg,#1a0500,#ff5a0d,#ffe066,#1a0500,#ff5a0d)',
+   mantras:['Spin with the embers','Burn slow','Heat in the centre','Let it turn you','Keep rolling']},
+  {id:'lunar',slug:'lunar',name:'Lunar Rain',genre:'Downtempo',bpm:90,fs:FS_LUNAR,prog:progLunar,thumbT:25,
+   desc:'Silver rain falls past a pale moon. Soft keys, slow bells and no rush at all.',
+   sw:'radial-gradient(circle at 50% 35%,#e8efff 0,#7a8fd1 25%,#0b1030 70%)',
+   mantras:['Let it rain','Nothing to catch','The moon is watching kindly','Soft landing','Stay a while']},
+  {id:'dread',slug:'dread',name:"Don't Look Back",genre:'Dark psytrance',bpm:100,fs:FS_DREAD,prog:progDread,thumbT:37.5,
+   desc:'A slow, hypnotic spiral. Every so often, something fast rushes straight at you. Calm mode turns the scare off.',
+   sw:'radial-gradient(circle,#000 0,#1a0010 30%,#7a0a2a 60%,#2a0030 90%)',
+   mantras:['Keep looking','Something is behind you','Almost there','Do not look away','Breathe in, wait']}
 ];
 const TR={on:false,mode:'picker',idx:0,preview:0,c:$('tCanvas'),scale:.75,frames:0,acc:0,last:0,raf:0,B:0,H:0,mt:0,idleT:0};
 TR.gl=GL(TR.c);
@@ -1157,7 +1319,7 @@ function trLoop(ts){
   TR.B+=(b-TR.B)*.2;TR.H+=(h-TR.H)*.2;
   TR.tt=(TR.tt||0)+dt/1000*(TR.calm?.35:(reduceMotion?.4:1));
   const tun=TUNNELS[TR.mode==='picker'?TR.preview:TR.idx];
-  if(TR.gl)TR.gl.draw(tun.id,tun.fs,TR.c.width,TR.c.height,{T:TR.tt,B:TR.B,P:(TR.mode==='tunnel'&&!TR.calm)?pulseNow()*.9:0,H:TR.H});
+  if(TR.gl)TR.gl.draw(tun.id,tun.fs,TR.c.width,TR.c.height,{T:TR.tt,B:TR.B,P:(TR.mode==='tunnel'&&!TR.calm)?pulseNow()*.9:0,H:TR.H,S:TR.calm?0:1});
   TR.raf=requestAnimationFrame(trLoop);
 }
 function flash(){const f=$('tFade');f.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.remove('on')));}
@@ -1174,7 +1336,7 @@ function showPicker(){
   setPreview(TR.idx);const card=$('tCards').children[TR.idx];if(card)card.focus({preventScroll:true});
 }
 function enterTunnel(i){
-  TR.idx=(i+TUNNELS.length)%TUNNELS.length;TR.mode='tunnel';const tun=TUNNELS[TR.idx];
+  TR.idx=(i+TUNNELS.length)%TUNNELS.length;TR.mode='tunnel';const tun=TUNNELS[TR.idx];TR.tt=0;
   window.va && window.va('event',{name:'tunnel_open',data:{tunnel:tun.slug}});
   flash();$('tPicker').hidden=true;$('tHud').hidden=false;
   $('tName').textContent=tun.name;$('tMeta').textContent=`${tun.genre} · ${tun.bpm} BPM`;
@@ -1190,8 +1352,7 @@ function exitTrance(){
   $('tranceBtn').focus({preventScroll:true});
 }
 function startMantras(tun){
-  clearInterval(TR.mt);const m=$('tMantra');let i=0;m.textContent=tun.mantras[0];m.style.opacity=1;
-  TR.mt=setInterval(()=>{m.style.opacity=0;setTimeout(()=>{if(TR.mode!=='tunnel')return;i=(i+1)%tun.mantras.length;m.textContent=tun.mantras[i];m.style.opacity=1;},1100);},8000);
+  clearInterval(TR.mt);$('tMantra').textContent='';
 }
 function wake(){const o=$('trance');o.classList.remove('idle');clearTimeout(TR.idleT);if(TR.mode==='tunnel')TR.idleT=setTimeout(()=>o.classList.add('idle'),3500);}
 ['pointermove','pointerdown'].forEach(ev=>$('trance').addEventListener(ev,wake));
