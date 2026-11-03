@@ -406,6 +406,7 @@ footer b{color:var(--fg);font-weight:600}
         <button class="btn sm" id="tNext" type="button" aria-label="Next tunnel">▶</button>
         <button class="btn violet sm" id="tSwitch" type="button">All tunnels</button>
         <button class="btn lime sm" id="tSound" type="button">Sound on</button>
+        <button class="btn sm" id="tCalm" type="button" aria-pressed="false">Calm</button>
         <button class="btn sm" id="tLink" type="button">Copy link</button>
         <button class="btn pink sm" id="tExit" type="button">Exit</button>
       </div>
@@ -1152,9 +1153,11 @@ function trLoop(ts){
   trSize();
   let b=0,h=0;
   if(AU.ctx&&SEQ.prog&&TR.mode==='tunnel'){AU.an.getByteFrequencyData(AU.freq);for(let i=0;i<4;i++)b+=AU.freq[i];b/=4*255;for(let i=30;i<70;i++)h+=AU.freq[i];h/=40*255;}
+  if(TR.calm){b=0;h=0;}
   TR.B+=(b-TR.B)*.2;TR.H+=(h-TR.H)*.2;
+  TR.tt=(TR.tt||0)+dt/1000*(TR.calm?.35:(reduceMotion?.4:1));
   const tun=TUNNELS[TR.mode==='picker'?TR.preview:TR.idx];
-  if(TR.gl)TR.gl.draw(tun.id,tun.fs,TR.c.width,TR.c.height,{T:(ts/1000)*(reduceMotion?.4:1),B:TR.B,P:TR.mode==='tunnel'?pulseNow()*.9:0,H:TR.H});
+  if(TR.gl)TR.gl.draw(tun.id,tun.fs,TR.c.width,TR.c.height,{T:TR.tt,B:TR.B,P:(TR.mode==='tunnel'&&!TR.calm)?pulseNow()*.9:0,H:TR.H});
   TR.raf=requestAnimationFrame(trLoop);
 }
 function flash(){const f=$('tFade');f.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>f.classList.remove('on')));}
@@ -1193,6 +1196,7 @@ function startMantras(tun){
 function wake(){const o=$('trance');o.classList.remove('idle');clearTimeout(TR.idleT);if(TR.mode==='tunnel')TR.idleT=setTimeout(()=>o.classList.add('idle'),3500);}
 ['pointermove','pointerdown'].forEach(ev=>$('trance').addEventListener(ev,wake));
 function syncSound(){const on=!!(SEQ.prog&&SEQ.prog.kind==='tunnel');$('tSound').textContent=on?'Sound off':'Sound on';}
+$('tCalm').onclick=()=>{TR.calm=!TR.calm;const b=$('tCalm');b.setAttribute('aria-pressed',TR.calm);b.textContent=TR.calm?'Calm on':'Calm';TR.c.style.filter=TR.calm?'brightness(.7) contrast(.85) saturate(.8)':'';};
 $('tSound').onclick=()=>{if(SEQ.prog&&SEQ.prog.kind==='tunnel'){stopProgram();$('tMusic').checked=false;}else{playProgram(TUNNELS[TR.idx].prog,'tunnel',TR.idx);$('tMusic').checked=true;}syncSound();};
 $('tPrev').onclick=()=>enterTunnel(TR.idx-1);
 $('tNext').onclick=()=>enterTunnel(TR.idx+1);
