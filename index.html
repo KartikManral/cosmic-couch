@@ -407,6 +407,7 @@ footer b{color:var(--fg);font-weight:600}
         <button class="btn violet sm" id="tSwitch" type="button">All tunnels</button>
         <button class="btn lime sm" id="tSound" type="button">Sound on</button>
         <button class="btn sm" id="tCalm" type="button" aria-pressed="false">Calm</button>
+        <button class="btn sm" id="tLive" type="button" aria-pressed="false" title="Uses your microphone. Audio stays in your browser.">Live input</button>
         <button class="btn sm" id="tLink" type="button">Copy link</button>
         <button class="btn pink sm" id="tExit" type="button">Exit</button>
       </div>
@@ -1297,7 +1298,10 @@ function trLoop(ts){
   if(TR.frames>=40){const avg=TR.acc/TR.frames;if(avg>24&&TR.scale>.35)TR.scale*=.85;else if(avg<15&&TR.scale<.95)TR.scale=Math.min(.95,TR.scale*1.05);TR.frames=0;TR.acc=0;}
   trSize();
   let b=0,h=0;
-  if(AU.ctx&&SEQ.prog&&TR.mode==='tunnel'){AU.an.getByteFrequencyData(AU.freq);for(let i=0;i<4;i++)b+=AU.freq[i];b/=4*255;for(let i=30;i<70;i++)h+=AU.freq[i];h/=40*255;}
+  let srcF=null;
+  if(TR.live&&LIVE&&TR.mode==='tunnel'){LIVE.an.getByteFrequencyData(LIVE.freq);srcF=LIVE.freq;}
+  else if(AU.ctx&&SEQ.prog&&TR.mode==='tunnel'){AU.an.getByteFrequencyData(AU.freq);srcF=AU.freq;}
+  if(srcF){for(let i=0;i<4;i++)b+=srcF[i];b/=4*255;for(let i=30;i<70;i++)h+=srcF[i];h/=40*255;}
   if(TR.calm){b=0;h=0;}
   TR.B+=(b-TR.B)*.2;TR.H+=(h-TR.H)*.2;
   TR.tt=(TR.tt||0)+dt/1000*(TR.calm?.35:(reduceMotion?.4:1));
@@ -1340,6 +1344,22 @@ function startMantras(tun){
 function wake(){const o=$('trance');o.classList.remove('idle');clearTimeout(TR.idleT);if(TR.mode==='tunnel')TR.idleT=setTimeout(()=>o.classList.add('idle'),3500);}
 ['pointermove','pointerdown'].forEach(ev=>$('trance').addEventListener(ev,wake));
 function syncSound(){const on=!!(SEQ.prog&&SEQ.prog.kind==='tunnel');$('tSound').textContent=on?'Sound off':'Sound on';}
+let LIVE=null;
+async function toggleLive(){
+  const b=$('tLive');
+  if(LIVE){LIVE.stream.getTracks().forEach(t=>t.stop());LIVE.src.disconnect();LIVE=null;TR.live=false;b.setAttribute('aria-pressed','false');b.textContent='Live input';return;}
+  try{
+    const a=au();
+    if(a.ctx.state==='suspended')await a.ctx.resume();
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const an=a.ctx.createAnalyser();an.fftSize=256;an.smoothingTimeConstant=.7;
+    const src=a.ctx.createMediaStreamSource(stream);
+    src.connect(an);
+    LIVE={an,freq:new Uint8Array(an.frequencyBinCount),stream,src};
+    TR.live=true;b.setAttribute('aria-pressed','true');b.textContent='Live on';
+  }catch(e){b.textContent='Mic blocked';}
+}
+$('tLive').onclick=toggleLive;
 $('tCalm').onclick=()=>{TR.calm=!TR.calm;const b=$('tCalm');b.setAttribute('aria-pressed',TR.calm);b.textContent=TR.calm?'Calm on':'Calm';TR.c.style.filter=TR.calm?'brightness(.7) contrast(.85) saturate(.8)':'';};
 $('tSound').onclick=()=>{if(SEQ.prog&&SEQ.prog.kind==='tunnel'){stopProgram();$('tMusic').checked=false;}else{playProgram(TUNNELS[TR.idx].prog,'tunnel',TR.idx);$('tMusic').checked=true;}syncSound();};
 $('tPrev').onclick=()=>enterTunnel(TR.idx-1);
