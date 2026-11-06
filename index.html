@@ -1302,6 +1302,7 @@ function trLoop(ts){
   if(TR.live&&LIVE&&TR.mode==='tunnel'){LIVE.an.getByteFrequencyData(LIVE.freq);srcF=LIVE.freq;}
   else if(AU.ctx&&SEQ.prog&&TR.mode==='tunnel'){AU.an.getByteFrequencyData(AU.freq);srcF=AU.freq;}
   if(srcF){for(let i=0;i<4;i++)b+=srcF[i];b/=4*255;for(let i=30;i<70;i++)h+=srcF[i];h/=40*255;}
+  if(TR.live&&LIVE){LIVE.pk=Math.max((LIVE.pk||0)*.995,b,h,.05);b=Math.min(1,b/LIVE.pk);h=Math.min(1,h/LIVE.pk);}
   if(TR.calm){b=0;h=0;}
   TR.B+=(b-TR.B)*.2;TR.H+=(h-TR.H)*.2;
   TR.tt=(TR.tt||0)+dt/1000*(TR.calm?.35:(reduceMotion?.4:1));
@@ -1357,6 +1358,8 @@ async function toggleLive(){
     src.connect(an);
     LIVE={an,freq:new Uint8Array(an.frequencyBinCount),stream,src};
     TR.live=true;b.setAttribute('aria-pressed','true');b.textContent='Live on';
+    if(SEQ.prog&&SEQ.prog.kind==='tunnel')stopProgram(true);
+    syncSound();
   }catch(e){b.textContent='Mic blocked';}
 }
 $('tLive').onclick=toggleLive;
