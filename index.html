@@ -1207,6 +1207,7 @@ const FS_DREAD=`void main(){
   float swirl=.5+.5*sin(sp*6.2831853*2.-T*.3+z*2.);
   vec3 col=pal(z*.08+.5,vec3(.4,.2,.5),vec3(.4,.3,.4),vec3(1.,1.,1.),vec3(.1,.4,.6))*(.2+.8*swirl);
   col*=smoothstep(0.,.45,r);
+  col*=.75+.9*B+.3*P;
   gl_FragColor=vec4(clamp(col,0.,1.),1.);
 }`;
 
