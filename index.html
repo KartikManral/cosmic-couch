@@ -364,7 +364,6 @@ footer b{color:var(--fg);font-weight:600}
         <button class="btn" type="button" data-play="pinball">Fractal Pinball</button>
         <button class="btn" type="button" data-play="melt">Melt Blocks</button>
         <button class="btn" type="button" data-play="fractal">Fractal Explorer</button>
-        <button class="btn" type="button" data-play="kaleido">Kaleidoscope Drawing</button>
         <button class="btn" type="button" data-play="dream">Dream Shapes</button>
         <button class="btn" type="button" data-play="sound">Sound Paint</button>
       </div>
@@ -1741,6 +1740,10 @@ addEventListener('keyup',e=>{G.keys[e.key]=false;});
 <script>
 const PLAY={alive:false,raf:0,cur:null};
 function pgCanvas(box,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;c.className='play-cv';c.style.aspectRatio=`${w}/${h}`;box.appendChild(c);return c;}
+function pgBg(x,w,h,t){
+  x.fillStyle=`hsl(${(t*30)%360},70%,12%)`;x.fillRect(0,0,w,h);
+  for(let i=0;i<4;i++){const gx=w/2+Math.cos(t*.4+i*1.6)*w*.4,gy=h/2+Math.sin(t*.33+i*2.3)*h*.4;const g=x.createRadialGradient(gx,gy,0,gx,gy,Math.max(w,h)*.6);g.addColorStop(0,`hsla(${(t*30+i*90)%360},100%,50%,.45)`);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,w,h);}
+}
 function pgLoop(fn){let last=performance.now();const f=t=>{if(!PLAY.alive)return;const dt=Math.min(.05,(t-last)/1000);last=t;fn(dt,t);PLAY.raf=requestAnimationFrame(f);};PLAY.raf=requestAnimationFrame(f);}
 function pgGLProg(box,w,h,frag){
   const c=pgCanvas(box,w,h);const gl=c.getContext('webgl');if(!gl)throw new Error('no webgl');
@@ -1771,7 +1774,7 @@ snake:{title:'Kaleido Snake',desc:'Eat the glowing orbs. Your trail mirrors into
   const info=document.createElement('p');info.className='pg-info';box.appendChild(info);
   const step=()=>{dir=nxt;const h={x:(body[0].x+dir.x+N)%N,y:(body[0].y+dir.y+N)%N};if(body.some(p=>p.x===h.x&&p.y===h.y)){over=true;return;}body.unshift(h);if(h.x===orb.x&&h.y===orb.y){score++;place();}else body.pop();};
   const draw=()=>{
-    x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
+    pgBg(x,c.width,c.height,performance.now()/1000);
     const cx=c.width/2,cy=c.height/2;
     for(let k=0;k<6;k++){x.save();x.translate(cx,cy);x.rotate(k*Math.PI/3);
       for(let m=0;m<2;m++){x.save();x.scale(m?-1:1,1);
@@ -1788,8 +1791,9 @@ pinball:{title:'Fractal Pinball',desc:'Keep the ball in play. Z and / (or the ar
   const c=pgCanvas(box,360,540),x=c.getContext('2d'),W=c.width,H=c.height,RB=8;
   const bumpers=[{x:120,y:130,r:22},{x:240,y:130,r:22},{x:180,y:220,r:26},{x:90,y:320,r:18},{x:270,y:320,r:18}];
   const F={L:{px:110,py:H-60,len:90,rest:.4,up:-.5,a:.4,on:false,dir:1},R:{px:250,py:H-60,len:90,rest:Math.PI-.4,up:Math.PI+.5,a:Math.PI-.4,on:false,dir:-1}};
+  const GUIDES=[{x1:0,y1:H-170,x2:110,y2:H-60},{x1:W,y1:H-170,x2:250,y2:H-60}];
   let ball,vx,vy,score=0,lives=3,hue=0,flash=0;
-  const reset=()=>{ball={x:W-30,y:H-120};vx=-30;vy=-200;};
+  const reset=()=>{ball={x:W/2+(Math.random()*60-30),y:50};vx=(Math.random()*120-60);vy=0;};
   reset();
   const onDown=e=>{if(e.key==='z'||e.key==='Z'||e.key==='ArrowLeft'){F.L.on=true;e.preventDefault();}if(e.key==='/'||e.key==='ArrowRight'){F.R.on=true;e.preventDefault();}};
   const onUp=e=>{if(e.key==='z'||e.key==='Z'||e.key==='ArrowLeft')F.L.on=false;if(e.key==='/'||e.key==='ArrowRight')F.R.on=false;};
@@ -1811,12 +1815,17 @@ pinball:{title:'Fractal Pinball',desc:'Keep the ball in play. Z and / (or the ar
         const cx=f.px+sx*t,cy=f.py+sy*t,dx=ball.x-cx,dy=ball.y-cy,d=Math.hypot(dx,dy)||1;
         if(d<RB+5){const nx=dx/d,ny=dy/d;ball.x=cx+nx*(RB+5);ball.y=cy+ny*(RB+5);const dot=vx*nx+vy*ny;if(dot<0){vx-=2*dot*nx*.9;vy-=2*dot*ny*.9;}if(f.on){vx+=nx*400;vy+=ny*400;}}}
     }
+    for(const g of GUIDES){const sx=g.x2-g.x1,sy=g.y2-g.y1,t=Math.max(0,Math.min(1,((ball.x-g.x1)*sx+(ball.y-g.y1)*sy)/(sx*sx+sy*sy)));
+      const cx=g.x1+sx*t,cy=g.y1+sy*t,dx=ball.x-cx,dy=ball.y-cy,d=Math.hypot(dx,dy)||1;
+      if(d<RB){const nx=dx/d,ny=dy/d;ball.x=cx+nx*RB;ball.y=cy+ny*RB;const dot=vx*nx+vy*ny;if(dot<0){vx-=2*dot*nx*.9;vy-=2*dot*ny*.9;}}}
     if(ball.y>H+20){lives--;if(lives<=0){lives=3;score=0;}reset();}
   };
   const draw=()=>{
-    x.fillStyle='#070714';x.fillRect(0,0,W,H);
+    pgBg(x,W,H,performance.now()/1000);
     const fr=(cx,cy,r,d)=>{if(d>3)return;x.strokeStyle=`hsla(${(hue+d*50)%360},100%,60%,${.5-d*.1})`;x.beginPath();x.arc(cx,cy,r,0,6.283);x.stroke();fr(cx+r*.5,cy-r*.3,r*.5,d+1);fr(cx-r*.5,cy-r*.3,r*.5,d+1);fr(cx,cy+r*.6,r*.45,d+1);};
     fr(W/2,H/2,140,0);
+    x.strokeStyle='rgba(63,243,255,.5)';x.lineWidth=4;x.lineCap='round';
+    for(const g of GUIDES){x.beginPath();x.moveTo(g.x1,g.y1);x.lineTo(g.x2,g.y2);x.stroke();}
     for(const b of bumpers){x.fillStyle=`hsl(${(hue+bumpers.indexOf(b)*60)%360},100%,${flash>0?80:60}%)`;x.shadowColor=x.fillStyle;x.shadowBlur=16;x.beginPath();x.arc(b.x,b.y,b.r,0,6.283);x.fill();}
     x.shadowBlur=0;
     x.strokeStyle='#ffffff';x.lineWidth=10;x.lineCap='round';
@@ -1830,14 +1839,13 @@ pinball:{title:'Fractal Pinball',desc:'Keep the ball in play. Z and / (or the ar
 melt:{title:'Melt Blocks',desc:'Stack the blocks and clear rows. Left and right to move, down to drop faster. Cleared rows melt away.',mount(box){
   const c=pgCanvas(box,240,480),x=c.getContext('2d'),COLS=10,ROWS=20,cs=24;
   const SH=[[[0,0],[1,0],[2,0],[3,0]],[[0,0],[1,0],[0,1],[1,1]],[[0,0],[1,0],[2,0],[1,1]],[[0,0],[1,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]]];
-  const COLORS=['#3ff3ff','#ffd23f','#ff3df2','#c4ff4d','#9b5cff'];
-  let grid,piece,score,acc,melts,over;
+  let grid,piece,score,acc,melts,over,hue=0,tt=0;
   const hit=(cells,px,py)=>cells.some(([a,b])=>{const X=px+a,Y=py+b;return X<0||X>=COLS||Y>=ROWS||(Y>=0&&grid[Y][X]);});
-  const spawn=()=>{const i=Math.floor(Math.random()*SH.length);piece={cells:SH[i],col:COLORS[i],x:3,y:0};if(hit(piece.cells,piece.x,piece.y))over=true;};
+  const spawn=()=>{const i=Math.floor(Math.random()*SH.length);piece={cells:SH[i],hue:Math.random()*360,x:3,y:0};if(hit(piece.cells,piece.x,piece.y))over=true;};
   const reset=()=>{grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));score=0;acc=0;melts=[];over=false;spawn();};
   reset();
   const lock=()=>{
-    piece.cells.forEach(([a,b])=>{const X=piece.x+a,Y=piece.y+b;if(Y>=0)grid[Y][X]=piece.col;});
+    piece.cells.forEach(([a,b])=>{const X=piece.x+a,Y=piece.y+b;if(Y>=0)grid[Y][X]=`hsl(${(piece.hue+Y*9+X*5)%360},100%,62%)`;});
     let cleared=0;
     for(let y=ROWS-1;y>=0;y--){if(grid[y].every(v=>v)){melts.push({y,t:0,row:grid[y].slice()});grid.splice(y,1);grid.unshift(Array(COLS).fill(null));cleared++;y++;}}
     score+=cleared*100;spawn();
@@ -1853,14 +1861,21 @@ melt:{title:'Melt Blocks',desc:'Stack the blocks and clear rows. Left and right 
   };
   document.addEventListener('keydown',onKey);
   const info=document.createElement('p');info.className='pg-info';box.appendChild(info);
+  const block=(X,Y,col)=>{x.fillStyle=col;x.shadowColor=col;x.shadowBlur=10;x.fillRect(X*cs+2,Y*cs+2,cs-4,cs-4);x.shadowBlur=0;x.fillStyle='rgba(255,255,255,.35)';x.fillRect(X*cs+4,Y*cs+4,cs-12,4);};
   const draw=()=>{
-    x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
-    grid.forEach((row,Y)=>row.forEach((col,X)=>{if(col){x.fillStyle=col;x.fillRect(X*cs+1,Y*cs+1,cs-2,cs-2);}}));
-    if(!over)piece.cells.forEach(([a,b])=>{x.fillStyle=piece.col;x.fillRect((piece.x+a)*cs+1,(piece.y+b)*cs+1,cs-2,cs-2);});
-    melts.forEach(m=>{m.row.forEach((col,X)=>{if(!col)return;x.globalAlpha=Math.max(0,1-m.t);x.fillStyle=col;x.fillRect(X*cs+1,m.y*cs+1,cs-2,cs*(1+m.t*3));});x.globalAlpha=1;});
+    const w=c.width,h=c.height;
+    pgBg(x,w,h,performance.now()/1000);
+    for(let i=0;i<3;i++){const gx=w/2+Math.cos(tt*.3+i*2.1)*w*.35,gy=h/2+Math.sin(tt*.25+i*1.7)*h*.3;const g=x.createRadialGradient(gx,gy,0,gx,gy,w*.6);g.addColorStop(0,`hsla(${(hue+i*120)%360},100%,40%,.35)`);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,w,h);}
+    x.strokeStyle='rgba(255,255,255,.06)';x.lineWidth=1;
+    for(let X=0;X<=COLS;X++){x.beginPath();x.moveTo(X*cs,0);x.lineTo(X*cs,h);x.stroke();}
+    for(let Y=0;Y<=ROWS;Y++){x.beginPath();x.moveTo(0,Y*cs);x.lineTo(w,Y*cs);x.stroke();}
+    grid.forEach((row,Y)=>row.forEach((col,X)=>{if(col)block(X,Y,col);}));
+    if(!over)piece.cells.forEach(([a,b])=>block(piece.x+a,piece.y+b,`hsl(${(piece.hue+(piece.y+b)*9)%360},100%,62%)`));
+    melts.forEach(m=>{m.row.forEach((col,X)=>{if(!col)return;x.globalAlpha=Math.max(0,1-m.t);x.fillStyle=col;x.fillRect(X*cs+2,m.y*cs+2,cs-4,cs*(1+m.t*3));});x.globalAlpha=1;});
     info.textContent=over?`Game over · score ${score} · press space to restart`:`Score ${score}`;
   };
   pgLoop(dt=>{
+    hue=(hue+dt*12)%360;tt+=dt;
     if(!over){acc+=dt;const speed=Math.max(.15,.6-score*.002);if(acc>speed){acc=0;drop();}}
     melts.forEach(m=>m.t+=dt);melts=melts.filter(m=>m.t<1);
     draw();
@@ -1872,35 +1887,26 @@ fractal:{title:'Fractal Explorer',desc:'Drag to move around the fractal. Scroll 
 void main(){
   vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
   vec2 c0=C+uv*Z;vec2 z=vec2(0.);float it=0.;
-  for(int i=0;i<180;i++){z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)+c0;if(dot(z,z)>256.)break;it+=1.;}
+  for(int i=0;i<220;i++){z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)+c0;if(dot(z,z)>256.)break;it+=1.;}
   float sm=it-log2(max(1e-6,log2(dot(z,z)+1e-6)));
-  vec3 col=.5+.5*cos(3.+sm*.06+T*.3+vec3(0.,.6,1.));
-  if(it>179.5)col=vec3(0.);
+  vec3 col=.5+.5*cos(3.+sm*.08+T*.3+vec3(0.,.6,1.));
+  if(it<219.5)col=mix(col,.5+.5*cos(T*.4+length(gl_FragCoord.xy/R.y)*3.+vec3(0.,2.,4.)),.35);
+  if(it>219.5){float a=atan(z.y,z.x);col=.5+.5*cos(a*3.+T*.6+vec3(0.,2.,4.));col*=.45+.35*sin(length(z)*3.-T);}
+  float wide=smoothstep(1.,4.,Z);
+  vec2 suv=(gl_FragCoord.xy-.5*R)/R.y;
+  col+=(.5+.5*cos(atan(suv.y,suv.x)*2.+length(suv)*5.-T*1.2+vec3(0.,2.,4.)))*.45*wide;
   gl_FragColor=vec4(col,1.);
 }`;
   const g=pgGLProg(box,480,360,FR);const st={cx:-.745,cy:.113,z:2.6};
+  const clampZ=()=>{st.z=Math.max(.05,Math.min(6,st.z));};
   let drag=null;
   const onDown=e=>{drag={x:e.clientX,y:e.clientY};};
   const onMove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};st.cx-=dx*st.z/g.h;st.cy+=dy*st.z/g.h;};
   const onUp=()=>{drag=null;};
-  const onWheel=e=>{e.preventDefault();st.z*=e.deltaY>0?1.1:.9;};
+  const onWheel=e=>{e.preventDefault();st.z*=e.deltaY>0?1.1:.9;clampZ();};
   g.c.addEventListener('pointerdown',onDown);window.addEventListener('pointermove',onMove);window.addEventListener('pointerup',onUp);g.c.addEventListener('wheel',onWheel,{passive:false});
   pgLoop(()=>{g.gl.uniform2f(g.u('R'),g.w,g.h);g.gl.uniform1f(g.u('T'),performance.now()/1000);g.gl.uniform2f(g.u('C'),st.cx,st.cy);g.gl.uniform1f(g.u('Z'),st.z);g.gl.drawArrays(g.gl.TRIANGLES,0,3);});
   return{unmount(){window.removeEventListener('pointermove',onMove);window.removeEventListener('pointerup',onUp);}};
-}},
-kaleido:{title:'Kaleidoscope Drawing',desc:'Draw with your mouse or finger. Your strokes mirror into a kaleidoscope.',mount(box){
-  const c=pgCanvas(box,480,360),x=c.getContext('2d'),cx=c.width/2,cy=c.height/2;let last=null,hue=0;
-  x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
-  const pos=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width-cx,y:(e.clientY-r.top)*c.height/r.height-cy};};
-  const seg=(a,b)=>{for(let k=0;k<8;k++)for(let m=0;m<2;m++){x.save();x.translate(cx,cy);x.rotate(k*Math.PI/4);x.scale(m?-1:1,1);x.strokeStyle=`hsl(${hue},100%,60%)`;x.lineWidth=3;x.lineCap='round';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();x.restore();}};
-  const down=e=>{last=pos(e);c.setPointerCapture(e.pointerId);};
-  const move=e=>{if(!last)return;const p=pos(e);seg(last,p);last=p;hue=(hue+1)%360;};
-  const up=()=>{last=null;};
-  c.addEventListener('pointerdown',down);c.addEventListener('pointermove',move);c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
-  const clr=document.createElement('button');clr.className='btn sm';clr.textContent='Clear';
-  clr.onclick=()=>{x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);};
-  box.appendChild(clr);
-  return{};
 }},
 dream:{title:'Dream Shapes',desc:'A slow, shifting pattern to watch.',mount(box){
   const FR=PG_NOISE+`uniform vec2 R;uniform float T;
@@ -1928,6 +1934,8 @@ void main(){
   float ring=smoothstep(.85,1.,rings);
   vec3 col=pal(r*.4+T*.03,vec3(.5),vec3(.5),vec3(1.),vec3(.1,.4,.6))*ring*(.5+B);
   col*=1.-smoothstep(.6,1.2,r);
+  vec3 bg=pal(r*.6-T*.08,vec3(.25),vec3(.25),vec3(1.),vec3(.1,.4,.6))*(.3+.1*sin(T+r*8.));
+  col+=bg*(.5+.5*smoothstep(.4,1.,r));
   gl_FragColor=vec4(clamp(col,0.,1.),1.);
 }`;
   const g=pgGLProg(box,480,300,FR);
