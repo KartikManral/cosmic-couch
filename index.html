@@ -210,6 +210,14 @@ footer b{color:var(--fg);font-weight:600}
 }
 </style>
 <style>html,body{margin:0}img{max-width:100%}</style>
+<style>
+.play-grid{display:flex;flex-wrap:wrap;gap:10px}
+.play-box{margin-top:16px;display:grid;gap:12px}
+.pg-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.pg-head span{color:var(--dim);font-size:14px}
+.play-cv{width:100%;max-width:640px;height:auto;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);touch-action:none;background:#070714}
+.pg-info{font-family:monospace;color:var(--dim);margin:0}
+</style>
 </head>
 <body>
 
@@ -342,6 +350,25 @@ footer b{color:var(--fg);font-weight:600}
         <button class="btn lime" id="gameBtn" type="button">Start game</button>
         <span class="score" id="gScore">Score 0 · Lives 3 · Best 0</span>
       </div>
+    </section>
+
+    <!-- PLAYGROUND -->
+    <section class="station wide glow-cyan" aria-labelledby="pl-h">
+      <div class="st-head">
+        <h2 id="pl-h">Playground</h2>
+        <span class="label">toys and games</span>
+      </div>
+      <p class="sub">Small visual toys and games. Nothing here needs an account.</p>
+      <div class="play-grid">
+        <button class="btn" type="button" data-play="snake">Kaleido Snake</button>
+        <button class="btn" type="button" data-play="pinball">Fractal Pinball</button>
+        <button class="btn" type="button" data-play="melt">Melt Blocks</button>
+        <button class="btn" type="button" data-play="fractal">Fractal Explorer</button>
+        <button class="btn" type="button" data-play="kaleido">Kaleidoscope Drawing</button>
+        <button class="btn" type="button" data-play="dream">Dream Shapes</button>
+        <button class="btn" type="button" data-play="sound">Sound Paint</button>
+      </div>
+      <div id="playBox" class="play-box" hidden></div>
     </section>
 
     <!-- THOUGHTS -->
@@ -1711,5 +1738,226 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{G.keys[e.key]=false;});
 </script>
 
+<script>
+const PLAY={alive:false,raf:0,cur:null};
+function pgCanvas(box,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;c.className='play-cv';c.style.aspectRatio=`${w}/${h}`;box.appendChild(c);return c;}
+function pgLoop(fn){let last=performance.now();const f=t=>{if(!PLAY.alive)return;const dt=Math.min(.05,(t-last)/1000);last=t;fn(dt,t);PLAY.raf=requestAnimationFrame(f);};PLAY.raf=requestAnimationFrame(f);}
+function pgGLProg(box,w,h,frag){
+  const c=pgCanvas(box,w,h);const gl=c.getContext('webgl');if(!gl)throw new Error('no webgl');
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;};
+  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,frag));gl.linkProgram(pr);gl.useProgram(pr);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const l=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0);gl.viewport(0,0,w,h);
+  return{c,gl,u:n=>gl.getUniformLocation(pr,n),w,h};
+}
+const PG_NOISE=`precision highp float;
+float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);for(int i=0;i<5;i++){v+=a*noise(p);p=m*p;a*=.5;}return v;}
+`;
+const GAMES={
+snake:{title:'Kaleido Snake',desc:'Eat the glowing orbs. Your trail mirrors into a kaleidoscope. Arrow keys or swipe.',mount(box){
+  const c=pgCanvas(box,480,480),x=c.getContext('2d'),N=20,cs=c.width/N;
+  let body,dir,nxt,orb,score,over,acc=0,hue=0;
+  const place=()=>{do{orb={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)};}while(body.some(p=>p.x===orb.x&&p.y===orb.y));};
+  const reset=()=>{body=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir=nxt={x:1,y:0};score=0;over=false;place();};
+  reset();
+  const onKey=e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(!m){if(e.key===' '&&over)reset();return;}e.preventDefault();if(m[0]===-dir.x&&m[1]===-dir.y)return;nxt={x:m[0],y:m[1]};};
+  document.addEventListener('keydown',onKey);
+  let sx=0,sy=0;
+  const onDown=e=>{sx=e.clientX;sy=e.clientY;if(over)reset();};
+  const onUp=e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;const m=Math.abs(dx)>Math.abs(dy)?[Math.sign(dx),0]:[0,Math.sign(dy)];if(m[0]===-dir.x&&m[1]===-dir.y)return;nxt={x:m[0],y:m[1]};};
+  c.addEventListener('pointerdown',onDown);c.addEventListener('pointerup',onUp);
+  const info=document.createElement('p');info.className='pg-info';box.appendChild(info);
+  const step=()=>{dir=nxt;const h={x:(body[0].x+dir.x+N)%N,y:(body[0].y+dir.y+N)%N};if(body.some(p=>p.x===h.x&&p.y===h.y)){over=true;return;}body.unshift(h);if(h.x===orb.x&&h.y===orb.y){score++;place();}else body.pop();};
+  const draw=()=>{
+    x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
+    const cx=c.width/2,cy=c.height/2;
+    for(let k=0;k<6;k++){x.save();x.translate(cx,cy);x.rotate(k*Math.PI/3);
+      for(let m=0;m<2;m++){x.save();x.scale(m?-1:1,1);
+        body.forEach((p,i)=>{const px=(p.x+.5)*cs-cx,py=(p.y+.5)*cs-cy;x.fillStyle=`hsla(${(hue+i*6)%360},100%,60%,${1-i/body.length*.6})`;x.beginPath();x.arc(px,py,cs*.42,0,6.283);x.fill();});
+        x.restore();}
+      x.restore();}
+    x.fillStyle=`hsl(${(hue+180)%360},100%,70%)`;x.shadowColor=x.fillStyle;x.shadowBlur=18;x.beginPath();x.arc((orb.x+.5)*cs,(orb.y+.5)*cs,cs*.3,0,6.283);x.fill();x.shadowBlur=0;
+    info.textContent=over?`Game over · score ${score} · press space or swipe to restart`:`Score ${score}`;
+  };
+  pgLoop(dt=>{hue=(hue+dt*20)%360;acc+=dt;if(!over&&acc>.12){acc=0;step();}draw();});
+  return{unmount(){document.removeEventListener('keydown',onKey);}};
+}},
+pinball:{title:'Fractal Pinball',desc:'Keep the ball in play. Z and / (or the arrow keys) move the flippers. Bumpers shift the colours.',mount(box){
+  const c=pgCanvas(box,360,540),x=c.getContext('2d'),W=c.width,H=c.height,RB=8;
+  const bumpers=[{x:120,y:130,r:22},{x:240,y:130,r:22},{x:180,y:220,r:26},{x:90,y:320,r:18},{x:270,y:320,r:18}];
+  const F={L:{px:110,py:H-60,len:90,rest:.4,up:-.5,a:.4,on:false,dir:1},R:{px:250,py:H-60,len:90,rest:Math.PI-.4,up:Math.PI+.5,a:Math.PI-.4,on:false,dir:-1}};
+  let ball,vx,vy,score=0,lives=3,hue=0,flash=0;
+  const reset=()=>{ball={x:W-30,y:H-120};vx=-30;vy=-200;};
+  reset();
+  const onDown=e=>{if(e.key==='z'||e.key==='Z'||e.key==='ArrowLeft'){F.L.on=true;e.preventDefault();}if(e.key==='/'||e.key==='ArrowRight'){F.R.on=true;e.preventDefault();}};
+  const onUp=e=>{if(e.key==='z'||e.key==='Z'||e.key==='ArrowLeft')F.L.on=false;if(e.key==='/'||e.key==='ArrowRight')F.R.on=false;};
+  document.addEventListener('keydown',onDown);document.addEventListener('keyup',onUp);
+  const info=document.createElement('p');info.className='pg-info';box.appendChild(info);
+  const seg=(f)=>{const ex=f.px+Math.cos(f.a)*f.len,ey=f.py+Math.sin(f.a)*f.len;return{ex,ey};};
+  const physics=dt=>{
+    for(const k of ['L','R']){const f=F[k],target=f.on?f.up:f.rest;const d=target-f.a;f.a+=Math.sign(d)*Math.min(Math.abs(d),9*dt);}
+    const sd=dt/4;
+    for(let s=0;s<4;s++){
+      vy+=900*sd;ball.x+=vx*sd;ball.y+=vy*sd;
+      if(ball.x<RB){ball.x=RB;vx=Math.abs(vx)*.9;}
+      if(ball.x>W-RB){ball.x=W-RB;vx=-Math.abs(vx)*.9;}
+      if(ball.y<RB){ball.y=RB;vy=Math.abs(vy)*.9;}
+      for(const b of bumpers){const dx=ball.x-b.x,dy=ball.y-b.y,d=Math.hypot(dx,dy)||1;
+        if(d<b.r+RB){const nx=dx/d,ny=dy/d;ball.x=b.x+nx*(b.r+RB);ball.y=b.y+ny*(b.r+RB);const dot=vx*nx+vy*ny;vx-=2*dot*nx*.9;vy-=2*dot*ny*.9;vx+=nx*120;vy+=ny*120;score+=10;hue=(hue+40)%360;flash=1;}}
+      for(const k of ['L','R']){const f=F[k],e=seg(f);
+        const sx=e.ex-f.px,sy=e.ey-f.py,t=Math.max(0,Math.min(1,((ball.x-f.px)*sx+(ball.y-f.py)*sy)/(f.len*f.len)));
+        const cx=f.px+sx*t,cy=f.py+sy*t,dx=ball.x-cx,dy=ball.y-cy,d=Math.hypot(dx,dy)||1;
+        if(d<RB+5){const nx=dx/d,ny=dy/d;ball.x=cx+nx*(RB+5);ball.y=cy+ny*(RB+5);const dot=vx*nx+vy*ny;if(dot<0){vx-=2*dot*nx*.9;vy-=2*dot*ny*.9;}if(f.on){vx+=nx*400;vy+=ny*400;}}}
+    }
+    if(ball.y>H+20){lives--;if(lives<=0){lives=3;score=0;}reset();}
+  };
+  const draw=()=>{
+    x.fillStyle='#070714';x.fillRect(0,0,W,H);
+    const fr=(cx,cy,r,d)=>{if(d>3)return;x.strokeStyle=`hsla(${(hue+d*50)%360},100%,60%,${.5-d*.1})`;x.beginPath();x.arc(cx,cy,r,0,6.283);x.stroke();fr(cx+r*.5,cy-r*.3,r*.5,d+1);fr(cx-r*.5,cy-r*.3,r*.5,d+1);fr(cx,cy+r*.6,r*.45,d+1);};
+    fr(W/2,H/2,140,0);
+    for(const b of bumpers){x.fillStyle=`hsl(${(hue+bumpers.indexOf(b)*60)%360},100%,${flash>0?80:60}%)`;x.shadowColor=x.fillStyle;x.shadowBlur=16;x.beginPath();x.arc(b.x,b.y,b.r,0,6.283);x.fill();}
+    x.shadowBlur=0;
+    x.strokeStyle='#ffffff';x.lineWidth=10;x.lineCap='round';
+    for(const k of ['L','R']){const f=F[k],e=seg(f);x.beginPath();x.moveTo(f.px,f.py);x.lineTo(e.ex,e.ey);x.stroke();}
+    x.fillStyle='#fff';x.shadowColor='#fff';x.shadowBlur=14;x.beginPath();x.arc(ball.x,ball.y,RB,0,6.283);x.fill();x.shadowBlur=0;
+    info.textContent=`Score ${score} · Lives ${lives}`;
+  };
+  pgLoop(dt=>{flash=Math.max(0,flash-dt*4);hue=(hue+dt*6)%360;physics(dt);draw();});
+  return{unmount(){document.removeEventListener('keydown',onDown);document.removeEventListener('keyup',onUp);}};
+}},
+melt:{title:'Melt Blocks',desc:'Stack the blocks and clear rows. Left and right to move, down to drop faster. Cleared rows melt away.',mount(box){
+  const c=pgCanvas(box,240,480),x=c.getContext('2d'),COLS=10,ROWS=20,cs=24;
+  const SH=[[[0,0],[1,0],[2,0],[3,0]],[[0,0],[1,0],[0,1],[1,1]],[[0,0],[1,0],[2,0],[1,1]],[[0,0],[1,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]]];
+  const COLORS=['#3ff3ff','#ffd23f','#ff3df2','#c4ff4d','#9b5cff'];
+  let grid,piece,score,acc,melts,over;
+  const hit=(cells,px,py)=>cells.some(([a,b])=>{const X=px+a,Y=py+b;return X<0||X>=COLS||Y>=ROWS||(Y>=0&&grid[Y][X]);});
+  const spawn=()=>{const i=Math.floor(Math.random()*SH.length);piece={cells:SH[i],col:COLORS[i],x:3,y:0};if(hit(piece.cells,piece.x,piece.y))over=true;};
+  const reset=()=>{grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));score=0;acc=0;melts=[];over=false;spawn();};
+  reset();
+  const lock=()=>{
+    piece.cells.forEach(([a,b])=>{const X=piece.x+a,Y=piece.y+b;if(Y>=0)grid[Y][X]=piece.col;});
+    let cleared=0;
+    for(let y=ROWS-1;y>=0;y--){if(grid[y].every(v=>v)){melts.push({y,t:0,row:grid[y].slice()});grid.splice(y,1);grid.unshift(Array(COLS).fill(null));cleared++;y++;}}
+    score+=cleared*100;spawn();
+  };
+  const drop=()=>{if(over)return;if(!hit(piece.cells,piece.x,piece.y+1))piece.y++;else lock();};
+  const onKey=e=>{
+    if(over&&e.key===' '){reset();return;}
+    if(e.key==='ArrowLeft'){if(!hit(piece.cells,piece.x-1,piece.y))piece.x--;}
+    else if(e.key==='ArrowRight'){if(!hit(piece.cells,piece.x+1,piece.y))piece.x++;}
+    else if(e.key==='ArrowDown'){drop();}
+    else return;
+    e.preventDefault();
+  };
+  document.addEventListener('keydown',onKey);
+  const info=document.createElement('p');info.className='pg-info';box.appendChild(info);
+  const draw=()=>{
+    x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
+    grid.forEach((row,Y)=>row.forEach((col,X)=>{if(col){x.fillStyle=col;x.fillRect(X*cs+1,Y*cs+1,cs-2,cs-2);}}));
+    if(!over)piece.cells.forEach(([a,b])=>{x.fillStyle=piece.col;x.fillRect((piece.x+a)*cs+1,(piece.y+b)*cs+1,cs-2,cs-2);});
+    melts.forEach(m=>{m.row.forEach((col,X)=>{if(!col)return;x.globalAlpha=Math.max(0,1-m.t);x.fillStyle=col;x.fillRect(X*cs+1,m.y*cs+1,cs-2,cs*(1+m.t*3));});x.globalAlpha=1;});
+    info.textContent=over?`Game over · score ${score} · press space to restart`:`Score ${score}`;
+  };
+  pgLoop(dt=>{
+    if(!over){acc+=dt;const speed=Math.max(.15,.6-score*.002);if(acc>speed){acc=0;drop();}}
+    melts.forEach(m=>m.t+=dt);melts=melts.filter(m=>m.t<1);
+    draw();
+  });
+  return{unmount(){document.removeEventListener('keydown',onKey);}};
+}},
+fractal:{title:'Fractal Explorer',desc:'Drag to move around the fractal. Scroll to zoom.',mount(box){
+  const FR=PG_NOISE+`uniform vec2 R;uniform float T;uniform vec2 C;uniform float Z;
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  vec2 c0=C+uv*Z;vec2 z=vec2(0.);float it=0.;
+  for(int i=0;i<180;i++){z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)+c0;if(dot(z,z)>256.)break;it+=1.;}
+  float sm=it-log2(max(1e-6,log2(dot(z,z)+1e-6)));
+  vec3 col=.5+.5*cos(3.+sm*.06+T*.3+vec3(0.,.6,1.));
+  if(it>179.5)col=vec3(0.);
+  gl_FragColor=vec4(col,1.);
+}`;
+  const g=pgGLProg(box,480,360,FR);const st={cx:-.745,cy:.113,z:2.6};
+  let drag=null;
+  const onDown=e=>{drag={x:e.clientX,y:e.clientY};};
+  const onMove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};st.cx-=dx*st.z/g.h;st.cy+=dy*st.z/g.h;};
+  const onUp=()=>{drag=null;};
+  const onWheel=e=>{e.preventDefault();st.z*=e.deltaY>0?1.1:.9;};
+  g.c.addEventListener('pointerdown',onDown);window.addEventListener('pointermove',onMove);window.addEventListener('pointerup',onUp);g.c.addEventListener('wheel',onWheel,{passive:false});
+  pgLoop(()=>{g.gl.uniform2f(g.u('R'),g.w,g.h);g.gl.uniform1f(g.u('T'),performance.now()/1000);g.gl.uniform2f(g.u('C'),st.cx,st.cy);g.gl.uniform1f(g.u('Z'),st.z);g.gl.drawArrays(g.gl.TRIANGLES,0,3);});
+  return{unmount(){window.removeEventListener('pointermove',onMove);window.removeEventListener('pointerup',onUp);}};
+}},
+kaleido:{title:'Kaleidoscope Drawing',desc:'Draw with your mouse or finger. Your strokes mirror into a kaleidoscope.',mount(box){
+  const c=pgCanvas(box,480,360),x=c.getContext('2d'),cx=c.width/2,cy=c.height/2;let last=null,hue=0;
+  x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);
+  const pos=e=>{const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width-cx,y:(e.clientY-r.top)*c.height/r.height-cy};};
+  const seg=(a,b)=>{for(let k=0;k<8;k++)for(let m=0;m<2;m++){x.save();x.translate(cx,cy);x.rotate(k*Math.PI/4);x.scale(m?-1:1,1);x.strokeStyle=`hsl(${hue},100%,60%)`;x.lineWidth=3;x.lineCap='round';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();x.restore();}};
+  const down=e=>{last=pos(e);c.setPointerCapture(e.pointerId);};
+  const move=e=>{if(!last)return;const p=pos(e);seg(last,p);last=p;hue=(hue+1)%360;};
+  const up=()=>{last=null;};
+  c.addEventListener('pointerdown',down);c.addEventListener('pointermove',move);c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+  const clr=document.createElement('button');clr.className='btn sm';clr.textContent='Clear';
+  clr.onclick=()=>{x.fillStyle='#070714';x.fillRect(0,0,c.width,c.height);};
+  box.appendChild(clr);
+  return{};
+}},
+dream:{title:'Dream Shapes',desc:'A slow, shifting pattern to watch.',mount(box){
+  const FR=PG_NOISE+`uniform vec2 R;uniform float T;
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y*2.;
+  float t=T*.1;
+  vec2 q=vec2(fbm(uv+t),fbm(uv+vec2(5.2,1.3)-t));
+  vec2 w=vec2(fbm(uv+4.*q+vec2(1.7,9.2)+t),fbm(uv+4.*q+vec2(8.3,2.8)-t));
+  float f=fbm(uv+4.*w);
+  vec3 col=mix(vec3(.1,.02,.3),vec3(1.,.4,.7),f);
+  col=mix(col,vec3(.2,.9,.9),smoothstep(.5,.9,w.x));
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+  const g=pgGLProg(box,480,300,FR);
+  pgLoop(()=>{g.gl.uniform2f(g.u('R'),g.w,g.h);g.gl.uniform1f(g.u('T'),performance.now()/1000);g.gl.drawArrays(g.gl.TRIANGLES,0,3);});
+  return{};
+}},
+sound:{title:'Sound Paint',desc:'Rings that grow denser and brighter with the sound. Use Live input for the mic, or play the tunnel music.',mount(box){
+  const FR=PG_NOISE+`uniform vec2 R;uniform float T;uniform float B;
+vec3 pal(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+  float r=length(uv);
+  float rings=abs(sin(r*(14.+B*10.)-T*2.));
+  float ring=smoothstep(.85,1.,rings);
+  vec3 col=pal(r*.4+T*.03,vec3(.5),vec3(.5),vec3(1.),vec3(.1,.4,.6))*ring*(.5+B);
+  col*=1.-smoothstep(.6,1.2,r);
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+  const g=pgGLProg(box,480,300,FR);
+  const level=()=>{
+    if(TR.live&&LIVE){LIVE.an.getByteFrequencyData(LIVE.freq);let s=0;for(let i=0;i<4;i++)s+=LIVE.freq[i];return Math.min(1,s/(4*255)*2);}
+    if(AU.ctx&&SEQ.prog){AU.an.getByteFrequencyData(AU.freq);let s=0;for(let i=0;i<4;i++)s+=AU.freq[i];return Math.min(1,s/(4*255)*2);}
+    return .3+.2*Math.sin(performance.now()/400);
+  };
+  pgLoop(()=>{g.gl.uniform2f(g.u('R'),g.w,g.h);g.gl.uniform1f(g.u('T'),performance.now()/1000);g.gl.uniform1f(g.u('B'),level());g.gl.drawArrays(g.gl.TRIANGLES,0,3);});
+  return{};
+}}
+};
+function playOpen(name){
+  playClose();
+  const box=$('playBox');box.hidden=false;PLAY.alive=true;
+  const g=GAMES[name];
+  const head=document.createElement('div');head.className='pg-head';
+  head.innerHTML=`<b>${g.title}</b><span>${g.desc}</span>`;
+  const close=document.createElement('button');close.className='btn sm';close.type='button';close.textContent='Close';close.onclick=playClose;
+  head.appendChild(close);box.appendChild(head);
+  try{PLAY.cur=g.mount(box)||{};}
+  catch(e){const p=document.createElement('p');p.className='pg-info';p.textContent='This toy needs WebGL, which this browser does not support.';box.appendChild(p);PLAY.cur={};}
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function playClose(){
+  PLAY.alive=false;cancelAnimationFrame(PLAY.raf);
+  if(PLAY.cur&&PLAY.cur.unmount)PLAY.cur.unmount();
+  PLAY.cur=null;const box=$('playBox');box.innerHTML='';box.hidden=true;
+}
+document.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',()=>playOpen(b.dataset.play)));
+</script>
 </body>
 </html>
